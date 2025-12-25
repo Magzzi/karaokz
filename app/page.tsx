@@ -111,17 +111,50 @@ export default function Home() {
         <div className="max-w-7xl mx-auto p-4 h-full">
           {/* Desktop Layout: Side by Side */}
           <div className="hidden lg:grid lg:grid-cols-2 gap-6 h-full">
-          {/* Left Panel: Player */}
-          <div className="h-full">
-            <YouTubePlayer videoId={currentVideoId} onVideoEnd={handleVideoEnd} />
+            {/* Left Panel: Player */}
+            <div className="h-full">
+              <YouTubePlayer videoId={currentVideoId} onVideoEnd={handleVideoEnd} />
+            </div>
+
+            {/* Right Panel: Search + Queue */}
+            <div className="h-full flex flex-col gap-6 overflow-hidden">
+              {/* Search */}
+              <Card className="shrink-0">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2">
+                    <Search className="h-5 w-5" />
+                    Search Songs
+                  </CardTitle>
+                </CardHeader>
+                <Separator />
+                <CardContent className="pt-4">
+                  <YouTubeSearch onAddToQueue={handleAddToQueue} />
+                </CardContent>
+              </Card>
+
+              {/* Queue */}
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <Queue
+                  queue={queue}
+                  currentVideoId={currentVideoId}
+                  onPlaySong={handlePlaySong}
+                  onRemoveSong={handleRemoveSong}
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Right Panel: Search + Queue */}
-          <div className="h-full flex flex-col gap-6 overflow-hidden">
+          {/* Mobile/Tablet Layout: Stacked */}
+          <div className="lg:hidden h-full flex flex-col gap-4 overflow-hidden">
+            {/* Player */}
+            <div className="aspect-video w-full shrink-0">
+              <YouTubePlayer videoId={currentVideoId} onVideoEnd={handleVideoEnd} />
+            </div>
+
             {/* Search */}
             <Card className="shrink-0">
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <Search className="h-5 w-5" />
                   Search Songs
                 </CardTitle>
@@ -131,39 +164,6 @@ export default function Home() {
                 <YouTubeSearch onAddToQueue={handleAddToQueue} />
               </CardContent>
             </Card>
-
-            {/* Queue */}
-            <div className="flex-1 min-h-0 overflow-hidden">
-              <Queue
-                queue={queue}
-                currentVideoId={currentVideoId}
-                onPlaySong={handlePlaySong}
-                onRemoveSong={handleRemoveSong}
-              />
-            </div>
-          </div>
-        </div>
-
-          {/* Mobile/Tablet Layout: Stacked */}
-          <div className="lg:hidden h-full flex flex-col gap-4 overflow-hidden">
-            {/* Player */}
-            <div className="aspect-video w-full shrink-0">
-            <YouTubePlayer videoId={currentVideoId} onVideoEnd={handleVideoEnd} />
-          </div>
-
-            {/* Search */}
-            <Card className="shrink-0">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Search className="h-5 w-5" />
-                Search Songs
-              </CardTitle>
-            </CardHeader>
-            <Separator />
-            <CardContent className="pt-4">
-              <YouTubeSearch onAddToQueue={handleAddToQueue} />
-            </CardContent>
-          </Card>
 
             {/* Queue */}
             <div className="flex-1 min-h-0 overflow-hidden">
