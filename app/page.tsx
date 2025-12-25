@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import YouTubePlayer from '@/components/YouTubePlayer';
 import YouTubeSearch from '@/components/YouTubeSearch';
 import Queue from '@/components/Queue';
@@ -10,6 +10,8 @@ import { QueueItem, YouTubeVideo } from '@/types/youtube';
 import { Search, Mic2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 
+const STORAGE_KEY = 'karaoke-state';
+
 /**
  * Main Karaoke App Page
  * Manages the queue, current playing video, and search functionality
@@ -18,6 +20,39 @@ export default function Home() {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
   const [currentQueueId, setCurrentQueueId] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Load state from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedState = localStorage.getItem(STORAGE_KEY);
+      if (savedState) {
+        const { queue: savedQueue, currentVideoId: savedVideoId, currentQueueId: savedQueueId } = JSON.parse(savedState);
+        setQueue(savedQueue || []);
+        setCurrentVideoId(savedVideoId || null);
+        setCurrentQueueId(savedQueueId || null);
+      }
+    } catch (error) {
+      console.error('Failed to load saved state:', error);
+    }
+    setIsHydrated(true);
+  }, []);
+
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    if (!isHydrated) return; // Don't save during initial hydration
+    
+    try {
+      const state = {
+        queue,
+        currentVideoId,
+        currentQueueId,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.error('Failed to save state:', error);
+    }
+  }, [queue, currentVideoId, currentQueueId, isHydrated]);
 
   /**
    * Add a video to the queue
