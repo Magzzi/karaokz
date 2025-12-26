@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { QueueItem } from '@/types/youtube';
-import { Trash2, Play, Music } from 'lucide-react';
+import { Trash2, Play, Music, ExternalLink } from 'lucide-react';
 
 interface QueueProps {
   queue: QueueItem[];
@@ -100,6 +100,14 @@ export default function Queue({ queue, currentVideoId, onPlaySong, onRemoveSong 
                               <Play className="h-3 w-3" />
                             </Button>
                           )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(`https://www.youtube.com/watch?v=${item.id}`, '_blank')}
+                            className="h-8 px-3"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Button>
                           <Button
                             size="sm"
                             variant="destructive"

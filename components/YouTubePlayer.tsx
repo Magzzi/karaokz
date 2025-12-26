@@ -22,6 +22,7 @@ declare global {
 export default function YouTubePlayer({ videoId, onVideoEnd }: YouTubePlayerProps) {
   const playerRef = useRef<any>(null);
   const [isApiReady, setIsApiReady] = useState(false);
+  const [embedError, setEmbedError] = useState(false);
   const onVideoEndRef = useRef(onVideoEnd);
 
   // Keep onVideoEnd ref updated
@@ -67,6 +68,16 @@ export default function YouTubePlayer({ videoId, onVideoEnd }: YouTubePlayerProp
             onVideoEndRef.current();
           }
         },
+        onError: (event: any) => {
+          // Error codes: 2 = invalid ID, 5 = HTML5 player error, 100 = not found, 101/150 = embedding disabled
+          if (event.data === 101 || event.data === 150) {
+            setEmbedError(true);
+            // Open video in new tab
+            if (videoId) {
+              window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+            }
+          }
+        },
       },
     });
 
@@ -84,6 +95,7 @@ export default function YouTubePlayer({ videoId, onVideoEnd }: YouTubePlayerProp
       const currentVideo = playerRef.current.getVideoData?.()?.video_id;
       // Only load if it's a different video
       if (currentVideo !== videoId) {
+        setEmbedError(false); // Reset error state for new video
         playerRef.current.loadVideoById(videoId);
       }
     }
@@ -91,7 +103,29 @@ export default function YouTubePlayer({ videoId, onVideoEnd }: YouTubePlayerProp
 
   return (
     <Card className="w-full h-full overflow-hidden bg-black dark:bg-gray-950">
-      {videoId ? (
+      {embedError ? (
+        <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
+          <div className="text-center space-y-4 p-8">
+            <svg
+              className="mx-auto h-24 w-24 text-yellow-600 dark:text-yellow-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <div>
+              <h3 className="text-xl font-semibold mb-2 text-gray-300 dark:text-gray-400">Check the other tab</h3>
+              <p className="text-sm">This video cannot be embedded. It has been opened in a new tab.</p>
+            </div>
+          </div>
+        </div>
+      ) : videoId ? (
         <div id="youtube-player" className="w-full h-full" />
       ) : (
         <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">

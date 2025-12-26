@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Karaoke Night - Sing Your Heart Out",
+  title: "Karaoke Showdown - Sing Your Heart Out",
   description: "A modern karaoke web app for live sessions. Search YouTube, queue songs, and sing along!",
 };
 

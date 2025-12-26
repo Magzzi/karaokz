@@ -88,12 +88,23 @@ export default function Home() {
    * Remove a song from the queue
    */
   const handleRemoveSong = useCallback((queueId: string) => {
-    setQueue((prev) => prev.filter((item) => item.queueId !== queueId));
-
-    // If we removed the currently playing song, play the next one
-    if (currentQueueId === queueId) {
-      handleVideoEnd();
-    }
+    setQueue((prev) => {
+      const updatedQueue = prev.filter((item) => item.queueId !== queueId);
+      
+      // If we removed the currently playing song, play the next one
+      if (currentQueueId === queueId) {
+        if (updatedQueue.length > 0) {
+          const nextSong = updatedQueue[0];
+          setCurrentVideoId(nextSong.id);
+          setCurrentQueueId(nextSong.queueId);
+        } else {
+          setCurrentVideoId(null);
+          setCurrentQueueId(null);
+        }
+      }
+      
+      return updatedQueue;
+    });
   }, [currentQueueId]);
 
   /**
@@ -122,18 +133,30 @@ export default function Home() {
   }, [queue, currentQueueId]);
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-gray-900 overflow-hidden">
+    <div className="h-screen flex flex-col overflow-hidden relative">
+      {/* Background layers */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-gray-900" />
+      <div 
+        className="absolute inset-0 dark:opacity-0 opacity-20"
+        style={{
+          backgroundImage: 'url(/background.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
+      
       {/* Header */}
-      <header className="bg-white dark:bg-gray-900 shadow-sm border-b dark:border-gray-800 shrink-0">
+      <header className="bg-white/70 dark:bg-gray-900 backdrop-blur-sm shadow-sm border-b dark:border-gray-800 shrink-0 relative z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Mic2 className="h-8 w-8 text-primary" />
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  Karaoke Night
+                  Allan and Faye - Karaoke Showdown
                 </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Search, queue, and sing along!</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Grab the mic, pick your track, and help Allan and Faye hit the high notes of married life!</p>
               </div>
             </div>
             <ThemeToggle />
@@ -142,12 +165,12 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden">
-        <div className="max-w-7xl mx-auto p-4 h-full">
+      <main className="flex-1 overflow-hidden relative z-10">
+        <div className="max-w-full mx-auto p-4 h-full">
           {/* Desktop Layout: Side by Side */}
-          <div className="hidden lg:grid lg:grid-cols-2 gap-6 h-full">
+          <div className="hidden lg:grid gap-6 h-full" style={{ gridTemplateColumns: '5fr 3fr' }}>
             {/* Left Panel: Player */}
-            <div className="h-full">
+            <div className="h-full w-full">
               <YouTubePlayer videoId={currentVideoId} onVideoEnd={handleVideoEnd} />
             </div>
 
