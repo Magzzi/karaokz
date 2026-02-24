@@ -123,41 +123,42 @@ export default function YouTubePlayer({ videoId, onVideoEnd }: YouTubePlayerProp
         <>
           <div id="youtube-player" className="w-full flex-1" />
           {/* Status Bar */}
-          <div className="px-4 py-3 border-t border-border/50 flex items-center justify-between">
-            <span className="text-xs text-muted-foreground font-mono">Now playing</span>
+          <div className="px-2 sm:px-4 py-2 sm:py-3 border-t border-border/50 flex items-center justify-between">
+            <span className="text-[10px] sm:text-xs text-muted-foreground font-mono">Now playing</span>
             <AudioVisualizer isPlaying={true} />
           </div>
         </>
       ) : (
         <>
-          <div className="w-full flex-1 flex items-center justify-center">
-            <div className="text-center space-y-6">
+          <div className="w-full flex-1 flex items-center justify-center p-4">
+            <div className="text-center space-y-3 sm:space-y-6">
               {/* Microphone Icon */}
-              <div className="w-20 h-20 rounded-full bg-muted/60 mx-auto flex items-center justify-center">
-                <Mic className="h-10 w-10 text-muted-foreground" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-muted/60 mx-auto flex items-center justify-center">
+                <Mic className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-muted-foreground" />
               </div>
               
               {/* Text */}
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-foreground font-mono">
+              <div className="space-y-1 sm:space-y-2">
+                <h3 className="text-base sm:text-lg md:text-xl font-bold text-foreground font-mono">
                   No Song Playing
                 </h3>
-                <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                <p className="text-xs sm:text-sm text-muted-foreground max-w-[200px] sm:max-w-xs mx-auto">
                   Search for a song and add it to the queue to get the party started!
                 </p>
               </div>
               
               {/* CTA Button */}
-              <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground font-mono text-sm font-semibold hover:opacity-90 transition-opacity glow-primary">
-                <Play size={16} />
+              <button className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-md bg-primary text-primary-foreground font-mono text-xs sm:text-sm font-semibold hover:opacity-90 transition-opacity glow-primary">
+                <Play size={14} className="sm:hidden" />
+                <Play size={16} className="hidden sm:block" />
                 Pick a Song
               </button>
             </div>
           </div>
           
           {/* Status Bar */}
-          <div className="px-4 py-3 border-t border-border/50 flex items-center justify-between">
-            <span className="text-xs text-muted-foreground font-mono">Ready to play</span>
+          <div className="px-2 sm:px-4 py-2 sm:py-3 border-t border-border/50 flex items-center justify-between">
+            <span className="text-[10px] sm:text-xs text-muted-foreground font-mono">Ready to play</span>
             <AudioVisualizer isPlaying={false} />
           </div>
         </>

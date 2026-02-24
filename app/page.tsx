@@ -128,30 +128,30 @@ export default function Home() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 py-2 sm:py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                <Music className="h-5 w-5 text-primary" />
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                <Music className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               </div>
-              <h1 className="text-lg font-bold text-foreground font-mono">
+              <h1 className="text-base sm:text-lg font-bold text-foreground font-mono">
                 KaraOkz
               </h1>
             </div>
-            <button className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-              <Settings className="h-4 w-4" />
+            <button className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+              <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </button>
           </div>
         </div>
       </motion.header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden p-4 md:p-6">
+      <main className="flex-1 overflow-hidden p-2 sm:p-4 md:p-6">
         <div className="max-w-7xl mx-auto h-full">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 h-full">
             {/* Left Panel: Player (2 columns on desktop) */}
             <motion.div 
-              className="lg:col-span-2 h-full min-h-75 lg:min-h-0"
+              className="md:col-span-2 lg:col-span-2 h-48 sm:h-64 md:h-80 lg:h-full"
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
@@ -161,7 +161,7 @@ export default function Home() {
 
             {/* Right Panel: Search + Queue (1 column on desktop) */}
             <motion.div 
-              className="h-full flex flex-col gap-4 overflow-hidden"
+              className="md:col-span-2 lg:col-span-1 h-auto lg:h-full flex flex-col gap-2 sm:gap-4 overflow-hidden"
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: 0.2 }}
@@ -170,7 +170,7 @@ export default function Home() {
               <YouTubeSearch onAddToQueue={handleAddToQueue} />
 
               {/* Queue */}
-              <div className="flex-1 min-h-0 overflow-hidden">
+              <div className="flex-1 min-h-40 sm:min-h-48 lg:min-h-0 overflow-hidden">
                 <Queue
                   queue={queue}
                   currentVideoId={currentVideoId}

@@ -43,12 +43,12 @@ export default function YouTubeSearch({ onAddToQueue }: YouTubeSearchProps) {
   };
 
   return (
-    <div className="glass rounded-lg p-5 shrink-0">
+    <div className="glass rounded-lg p-3 sm:p-4 md:p-5 shrink-0">
       {/* Header */}
-      <div className="mb-4">
+      <div className="mb-2 sm:mb-4">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-          <h2 className="text-sm font-semibold text-foreground font-mono uppercase tracking-wide">
+          <h2 className="text-xs sm:text-sm font-semibold text-foreground font-mono uppercase tracking-wide">
             Search Songs
           </h2>
         </div>
@@ -56,16 +56,16 @@ export default function YouTubeSearch({ onAddToQueue }: YouTubeSearchProps) {
 
       {/* Search Form */}
       <form onSubmit={handleSearch} className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
         <Input
           type="text"
           placeholder="Song or artist name..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="pl-9 pr-4 bg-muted border-border/50 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-primary/20 font-mono text-xs"
+          className="pl-8 sm:pl-9 pr-4 bg-muted border-border/50 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-primary/20 font-mono text-xs h-8 sm:h-9 md:h-10"
         />
         {loading && (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-primary" />
+          <Loader2 className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin text-primary" />
         )}
       </form>
 
@@ -87,7 +87,7 @@ export default function YouTubeSearch({ onAddToQueue }: YouTubeSearchProps) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="mt-4 space-y-2 max-h-64 overflow-y-auto"
+            className="mt-2 sm:mt-4 space-y-1.5 sm:space-y-2 max-h-40 sm:max-h-56 md:max-h-64 overflow-y-auto"
           >
             {results.map((video, index) => (
               <motion.div 
@@ -95,23 +95,23 @@ export default function YouTubeSearch({ onAddToQueue }: YouTubeSearchProps) {
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="flex items-center gap-3 p-2.5 rounded-md bg-muted/40 hover:bg-muted/60 transition-colors group"
+                className="flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2.5 rounded-md bg-muted/40 hover:bg-muted/60 transition-colors group"
               >
                 {/* Thumbnail */}
                 <img
                   src={video.thumbnail}
                   alt={video.title}
-                  className="w-16 h-10 object-cover rounded shrink-0"
+                  className="w-12 h-8 sm:w-16 sm:h-10 object-cover rounded shrink-0"
                 />
                 
                 {/* Video Info */}
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-mono text-xs font-semibold text-foreground leading-tight truncate">
+                  <h4 className="font-mono text-[10px] sm:text-xs font-semibold text-foreground leading-tight truncate">
                     {video.title}
                   </h4>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] text-muted-foreground truncate">{video.channelName}</span>
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-mono">
+                  <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5">
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground truncate">{video.channelName}</span>
+                    <Badge variant="secondary" className="text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 font-mono hidden sm:inline-flex">
                       {video.duration}
                     </Badge>
                   </div>
@@ -121,9 +121,9 @@ export default function YouTubeSearch({ onAddToQueue }: YouTubeSearchProps) {
                 <Button
                   size="sm"
                   onClick={() => onAddToQueue(video)}
-                  className="w-7 h-7 p-0 bg-primary hover:bg-primary/90 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity"
+                  className="w-6 h-6 sm:w-7 sm:h-7 p-0 bg-primary hover:bg-primary/90 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
               </motion.div>
             ))}
