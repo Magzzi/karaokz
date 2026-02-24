@@ -180,8 +180,23 @@ export default function Home() {
               </div>
             </motion.div>
           </div>
+          
         </div>
       </main>
+
+      {/* Footer */}
+      <motion.footer 
+        className="glass border-t border-border/50 shrink-0"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.3 }}
+      >
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 py-2 sm:py-3">
+          <p className="text-center text-[10px] sm:text-xs text-muted-foreground font-mono">
+            © {new Date().getFullYear()} Zio Magugat · Built with intention
+          </p>
+        </div>
+      </motion.footer>
     </div>
   );
 }
