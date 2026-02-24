@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Card } from '@/components/ui/card';
+import { motion } from 'framer-motion';
+import { Mic, Play } from 'lucide-react';
 
 interface YouTubePlayerProps {
   videoId: string | null;
@@ -13,6 +14,33 @@ declare global {
     YT: any;
     onYouTubeIframeAPIReady: () => void;
   }
+}
+
+/**
+ * Audio Visualizer Bars Component
+ */
+function AudioVisualizer({ isPlaying }: { isPlaying: boolean }) {
+  return (
+    <div className="flex items-end gap-0.5 h-4">
+      {[1, 2, 3, 4].map((bar) => (
+        <motion.div
+          key={bar}
+          className="w-1 bg-primary rounded-sm"
+          animate={isPlaying ? {
+            height: ['8px', '16px', '8px', '12px', '8px'],
+          } : {
+            height: '8px',
+          }}
+          transition={isPlaying ? {
+            duration: 0.8,
+            repeat: Infinity,
+            delay: bar * 0.1,
+            ease: 'easeInOut',
+          } : {}}
+        />
+      ))}
+    </div>
+  );
 }
 
 /**
@@ -90,38 +118,50 @@ export default function YouTubePlayer({ videoId, onVideoEnd }: YouTubePlayerProp
   }, [videoId]);
 
   return (
-    <Card className="w-full h-full overflow-hidden bg-black dark:bg-gray-950">
+    <div className="glass rounded-lg w-full h-full overflow-hidden flex flex-col">
       {videoId ? (
-        <div id="youtube-player" className="w-full h-full" />
+        <>
+          <div id="youtube-player" className="w-full flex-1" />
+          {/* Status Bar */}
+          <div className="px-4 py-3 border-t border-border/50 flex items-center justify-between">
+            <span className="text-xs text-muted-foreground font-mono">Now playing</span>
+            <AudioVisualizer isPlaying={true} />
+          </div>
+        </>
       ) : (
-        <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
-          <div className="text-center space-y-4">
-            <svg
-              className="mx-auto h-24 w-24 text-gray-600 dark:text-gray-700"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-300 dark:text-gray-600">No video playing</h3>
-              <p className="text-sm">Search and add songs to the queue to get started</p>
+        <>
+          <div className="w-full flex-1 flex items-center justify-center">
+            <div className="text-center space-y-6">
+              {/* Microphone Icon */}
+              <div className="w-20 h-20 rounded-full bg-muted/60 mx-auto flex items-center justify-center">
+                <Mic className="h-10 w-10 text-muted-foreground" />
+              </div>
+              
+              {/* Text */}
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-foreground font-mono">
+                  No Song Playing
+                </h3>
+                <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                  Search for a song and add it to the queue to get the party started!
+                </p>
+              </div>
+              
+              {/* CTA Button */}
+              <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground font-mono text-sm font-semibold hover:opacity-90 transition-opacity glow-primary">
+                <Play size={16} />
+                Pick a Song
+              </button>
             </div>
           </div>
-        </div>
+          
+          {/* Status Bar */}
+          <div className="px-4 py-3 border-t border-border/50 flex items-center justify-between">
+            <span className="text-xs text-muted-foreground font-mono">Ready to play</span>
+            <AudioVisualizer isPlaying={false} />
+          </div>
+        </>
       )}
-    </Card>
+    </div>
   );
 }

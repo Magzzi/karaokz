@@ -1,20 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { ThemeProvider } from "@/components/theme-provider";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Karaoke Night - Sing Your Heart Out",
+  title: "KaraOkz - Sing Your Heart Out",
   description: "A modern karaoke web app for live sessions. Search YouTube, queue songs, and sing along!",
 };
 
@@ -24,13 +23,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        <ThemeProvider defaultTheme="light" storageKey="karaoke-theme">
-          {children}
-        </ThemeProvider>
+        {children}
       </body>
     </html>
   );

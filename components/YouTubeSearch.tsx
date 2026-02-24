@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { searchYouTubeVideos } from '@/lib/youtube';
 import { YouTubeVideo } from '@/types/youtube';
-import { Search, Plus, Loader2, X } from 'lucide-react';
+import { Search, Plus, Loader2 } from 'lucide-react';
 
 interface YouTubeSearchProps {
   onAddToQueue: (video: YouTubeVideo) => void;
@@ -42,92 +42,94 @@ export default function YouTubeSearch({ onAddToQueue }: YouTubeSearchProps) {
     }
   };
 
-  const handleClear = () => {
-    setQuery('');
-    setResults([]);
-    setError(null);
-  };
-
   return (
-    <div className="space-y-4">
+    <div className="glass rounded-lg p-5 shrink-0">
+      {/* Header */}
+      <div className="mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+          <h2 className="text-sm font-semibold text-foreground font-mono uppercase tracking-wide">
+            Search Songs
+          </h2>
+        </div>
+      </div>
+
       {/* Search Form */}
-      <form onSubmit={handleSearch} className="flex gap-2">
+      <form onSubmit={handleSearch} className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           type="text"
-          placeholder="Search for songs or artists..."
+          placeholder="Song or artist name..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="flex-1"
+          className="pl-9 pr-4 bg-muted border-border/50 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-primary/20 font-mono text-xs"
         />
-        <Button type="submit" disabled={loading || !query.trim()}>
-          {loading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Search className="h-4 w-4" />
-          )}
-        </Button>
-        <Button 
-          type="button" 
-          variant="outline" 
-          size="icon"
-          onClick={handleClear}
-          disabled={!query && results.length === 0}
-          className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive transition-colors"
-        >
-          <X className="h-4 w-4" />
-        </Button>
+        {loading && (
+          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-primary" />
+        )}
       </form>
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded">
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-3 bg-destructive/10 border border-destructive/30 text-destructive px-3 py-2 rounded text-xs"
+        >
           {error}
-        </div>
+        </motion.div>
       )}
 
       {/* Search Results */}
-      {results.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400">Search Results</h3>
-          <div className="space-y-2 max-h-150 overflow-y-auto">
-            {results.map((video) => (
-              <Card key={video.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-3">
-                  <div className="flex gap-3">
-                    {/* Thumbnail */}
-                    <img
-                      src={video.thumbnail}
-                      alt={video.title}
-                      className="w-32 h-20 object-cover rounded shrink-0"
-                    />
-                    
-                    {/* Video Info */}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-sm line-clamp-2 mb-1">
-                        {video.title}
-                      </h4>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{video.channelName}</p>
-                      <Badge variant="secondary" className="text-xs">
-                        {video.duration}
-                      </Badge>
-                    </div>
-                    
-                    {/* Add Button */}
-                    <Button
-                      size="sm"
-                      onClick={() => onAddToQueue(video)}
-                      className="shrink-0"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add
-                    </Button>
+      <AnimatePresence>
+        {results.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mt-4 space-y-2 max-h-64 overflow-y-auto"
+          >
+            {results.map((video, index) => (
+              <motion.div 
+                key={video.id}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex items-center gap-3 p-2.5 rounded-md bg-muted/40 hover:bg-muted/60 transition-colors group"
+              >
+                {/* Thumbnail */}
+                <img
+                  src={video.thumbnail}
+                  alt={video.title}
+                  className="w-16 h-10 object-cover rounded shrink-0"
+                />
+                
+                {/* Video Info */}
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-mono text-xs font-semibold text-foreground leading-tight truncate">
+                    {video.title}
+                  </h4>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[10px] text-muted-foreground truncate">{video.channelName}</span>
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-mono">
+                      {video.duration}
+                    </Badge>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                
+                {/* Add Button */}
+                <Button
+                  size="sm"
+                  onClick={() => onAddToQueue(video)}
+                  className="w-7 h-7 p-0 bg-primary hover:bg-primary/90 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </motion.div>
             ))}
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

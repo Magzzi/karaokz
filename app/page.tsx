@@ -1,14 +1,12 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import YouTubePlayer from '@/components/YouTubePlayer';
 import YouTubeSearch from '@/components/YouTubeSearch';
 import Queue from '@/components/Queue';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { QueueItem, YouTubeVideo } from '@/types/youtube';
-import { Search, Mic2 } from 'lucide-react';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { Music, Settings } from 'lucide-react';
 
 const STORAGE_KEY = 'karaoke-state';
 
@@ -122,50 +120,54 @@ export default function Home() {
   }, [queue, currentQueueId]);
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-gray-900 overflow-hidden">
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-900 shadow-sm border-b dark:border-gray-800 shrink-0">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+      <motion.header 
+        className="glass border-b border-border/50 shrink-0"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Mic2 className="h-8 w-8 text-primary" />
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  Karaoke Night
-                </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Search, queue, and sing along!</p>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                <Music className="h-5 w-5 text-primary" />
               </div>
+              <h1 className="text-lg font-bold text-foreground font-mono">
+                KaraOkz
+              </h1>
             </div>
-            <ThemeToggle />
+            <button className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+              <Settings className="h-4 w-4" />
+            </button>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden">
-        <div className="max-w-7xl mx-auto p-4 h-full">
-          {/* Desktop Layout: Side by Side */}
-          <div className="hidden lg:grid lg:grid-cols-2 gap-6 h-full">
-            {/* Left Panel: Player */}
-            <div className="h-full">
+      <main className="flex-1 overflow-hidden p-4 md:p-6">
+        <div className="max-w-7xl mx-auto h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
+            {/* Left Panel: Player (2 columns on desktop) */}
+            <motion.div 
+              className="lg:col-span-2 h-full min-h-75 lg:min-h-0"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+            >
               <YouTubePlayer videoId={currentVideoId} onVideoEnd={handleVideoEnd} />
-            </div>
+            </motion.div>
 
-            {/* Right Panel: Search + Queue */}
-            <div className="h-full flex flex-col gap-6 overflow-hidden">
+            {/* Right Panel: Search + Queue (1 column on desktop) */}
+            <motion.div 
+              className="h-full flex flex-col gap-4 overflow-hidden"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+            >
               {/* Search */}
-              <Card className="shrink-0">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2">
-                    <Search className="h-5 w-5" />
-                    Search Songs
-                  </CardTitle>
-                </CardHeader>
-                <Separator />
-                <CardContent className="pt-4">
-                  <YouTubeSearch onAddToQueue={handleAddToQueue} />
-                </CardContent>
-              </Card>
+              <YouTubeSearch onAddToQueue={handleAddToQueue} />
 
               {/* Queue */}
               <div className="flex-1 min-h-0 overflow-hidden">
@@ -176,39 +178,7 @@ export default function Home() {
                   onRemoveSong={handleRemoveSong}
                 />
               </div>
-            </div>
-          </div>
-
-          {/* Mobile/Tablet Layout: Stacked */}
-          <div className="lg:hidden h-full flex flex-col gap-4 overflow-hidden">
-            {/* Player */}
-            <div className="aspect-video w-full shrink-0">
-              <YouTubePlayer videoId={currentVideoId} onVideoEnd={handleVideoEnd} />
-            </div>
-
-            {/* Search */}
-            <Card className="shrink-0">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Search className="h-5 w-5" />
-                  Search Songs
-                </CardTitle>
-              </CardHeader>
-              <Separator />
-              <CardContent className="pt-4">
-                <YouTubeSearch onAddToQueue={handleAddToQueue} />
-              </CardContent>
-            </Card>
-
-            {/* Queue */}
-            <div className="flex-1 min-h-0 overflow-hidden">
-              <Queue
-                queue={queue}
-                currentVideoId={currentVideoId}
-                onPlaySong={handlePlaySong}
-                onRemoveSong={handleRemoveSong}
-              />
-            </div>
+            </motion.div>
           </div>
         </div>
       </main>

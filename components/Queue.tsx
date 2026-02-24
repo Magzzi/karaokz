@@ -1,12 +1,11 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { QueueItem } from '@/types/youtube';
-import { Trash2, Play, Music } from 'lucide-react';
+import { Trash2, Play, ListMusic } from 'lucide-react';
 
 interface QueueProps {
   queue: QueueItem[];
@@ -21,103 +20,118 @@ interface QueueProps {
  */
 export default function Queue({ queue, currentVideoId, onPlaySong, onRemoveSong }: QueueProps) {
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2">
-          <Music className="h-5 w-5" />
-          Queue ({queue.length})
-        </CardTitle>
-      </CardHeader>
-      <Separator />
-      <CardContent className="flex-1 p-0 overflow-hidden">
+    <div className="glass rounded-lg h-full flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="px-5 py-4">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+          <h2 className="text-sm font-semibold text-foreground font-mono uppercase tracking-wide">
+            Queue
+          </h2>
+          {queue.length > 0 && (
+            <span className="text-xs text-muted-foreground font-mono">({queue.length})</span>
+          )}
+        </div>
+      </div>
+      
+      {/* Content */}
+      <div className="flex-1 overflow-hidden">
         {queue.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-gray-400 dark:text-gray-500 p-6">
-            <div className="text-center space-y-2">
-              <Music className="h-16 w-16 mx-auto text-gray-300 dark:text-gray-600" />
-              <p className="font-medium">Queue is empty</p>
-              <p className="text-sm">Search and add songs to get started</p>
+          <div className="h-full flex items-center justify-center px-5 pb-5">
+            <div className="text-center space-y-3">
+              <ListMusic className="h-10 w-10 mx-auto text-muted-foreground/50" />
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">No songs in the queue yet.</p>
+                <p className="text-xs text-muted-foreground/70">Search and add songs above!</p>
+              </div>
             </div>
           </div>
         ) : (
           <ScrollArea className="h-full">
-            <div className="p-4 space-y-2">
+            <motion.div 
+              className="px-4 pb-4 space-y-2"
+              initial="hidden"
+              animate="show"
+              variants={{
+                hidden: {},
+                show: { transition: { staggerChildren: 0.05 } }
+              }}
+            >
               {queue.map((item, index) => {
                 const isCurrentlyPlaying = item.id === currentVideoId;
                 
                 return (
-                  <Card
+                  <motion.div
                     key={item.queueId}
-                    className={`transition-all ${
+                    variants={{
+                      hidden: { opacity: 0, x: -8 },
+                      show: { opacity: 1, x: 0, transition: { duration: 0.3 } }
+                    }}
+                    className={`flex items-center gap-3 p-2.5 rounded-md transition-colors ${
                       isCurrentlyPlaying
-                        ? 'bg-primary/10 border-primary shadow-md'
-                        : 'hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600'
+                        ? 'bg-primary/20 border border-primary/30'
+                        : 'bg-muted/40 hover:bg-muted/60'
                     }`}
                   >
-                    <CardContent className="p-3">
-                      <div className="flex gap-3">
-                        {/* Queue Number & Thumbnail */}
-                        <div className="relative shrink-0">
-                          <img
-                            src={item.thumbnail}
-                            alt={item.title}
-                            className="w-24 h-16 object-cover rounded"
-                          />
-                          <div className="absolute -top-2 -left-2 bg-primary text-primary-foreground rounded-full h-6 w-6 flex items-center justify-center text-xs font-bold">
-                            {index + 1}
-                          </div>
-                        </div>
+                    {/* Queue Number */}
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${
+                      isCurrentlyPlaying
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-secondary-foreground'
+                    }`}>
+                      {index + 1}
+                    </div>
 
-                        {/* Song Info */}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm line-clamp-2 mb-1">
-                            {item.title}
-                          </h4>
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 truncate">
-                            {item.channelName}
-                          </p>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-xs">
-                              {item.duration}
-                            </Badge>
-                            {isCurrentlyPlaying && (
-                              <Badge className="text-xs">
-                                <Play className="h-3 w-3 mr-1" />
-                                Now Playing
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
+                    {/* Thumbnail */}
+                    <img
+                      src={item.thumbnail}
+                      alt={item.title}
+                      className="w-12 h-8 object-cover rounded shrink-0"
+                    />
 
-                        {/* Actions */}
-                        <div className="flex flex-col gap-1 shrink-0">
-                          {!isCurrentlyPlaying && (
-                            <Button
-                              size="sm"
-                              variant="default"
-                              onClick={() => onPlaySong(item.queueId)}
-                              className="h-8 px-3"
-                            >
-                              <Play className="h-3 w-3" />
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => onRemoveSong(item.queueId)}
-                            className="h-8 px-3"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                    {/* Song Info */}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-mono text-xs font-semibold text-foreground leading-tight truncate">
+                        {item.title}
+                      </h4>
+                      <p className="text-muted-foreground text-[10px] truncate">
+                        {item.channelName}
+                      </p>
+                    </div>
+
+                    {/* Duration Badge */}
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 font-mono shrink-0">
+                      {item.duration}
+                    </Badge>
+
+                    {/* Actions */}
+                    <div className="flex gap-1 shrink-0">
+                      {!isCurrentlyPlaying && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => onPlaySong(item.queueId)}
+                          className="w-7 h-7 p-0 hover:bg-primary/20 hover:text-primary"
+                        >
+                          <Play className="h-3 w-3" />
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => onRemoveSong(item.queueId)}
+                        className="w-7 h-7 p-0 hover:bg-destructive/20 hover:text-destructive"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
           </ScrollArea>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
