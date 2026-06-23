@@ -77,7 +77,7 @@ export default function CreateRoomDialog({ onClose }: CreateRoomDialogProps) {
               autoFocus
               value={hostName}
               onChange={(e) => setHostName(e.target.value)}
-              placeholder="e.g. Zio"
+              placeholder="e.g. John Doe"
               className="mt-1.5 bg-muted border-border/50 font-mono text-sm h-10"
             />
           </div>
