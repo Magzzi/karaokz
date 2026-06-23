@@ -65,6 +65,27 @@ export async function removeQueueItem(itemId: string): Promise<void> {
   await supabase.from('queue_items').delete().eq('id', itemId);
 }
 
+// Swaps the position of an item with the one above or below it
+export async function moveQueueItem(
+  itemId: string,
+  direction: 'up' | 'down',
+  items: RoomQueueItem[]
+): Promise<void> {
+  const idx = items.findIndex(i => i.id === itemId);
+  if (idx === -1) return;
+  if (direction === 'up' && idx === 0) return;
+  if (direction === 'down' && idx === items.length - 1) return;
+
+  const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+  const posA = items[idx].position;
+  const posB = items[swapIdx].position;
+
+  await Promise.all([
+    supabase.from('queue_items').update({ position: posB }).eq('id', items[idx].id),
+    supabase.from('queue_items').update({ position: posA }).eq('id', items[swapIdx].id),
+  ]);
+}
+
 export async function touchRoom(roomId: string): Promise<void> {
   await supabase.rpc('touch_room', { p_room_id: roomId });
 }
