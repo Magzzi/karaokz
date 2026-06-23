@@ -87,9 +87,34 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
       )
       .on(
         'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'queue_items', filter: `room_id=eq.${room.id}` },
+        (payload) => {
+          const updated = payload.new as RoomQueueItem;
+          setQueueItems(prev => prev.map(i => i.id === updated.id ? updated : i).sort((a, b) => a.position - b.position));
+        }
+      )
+      .on(
+        'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'queue_items', filter: `room_id=eq.${room.id}` },
         (payload) => {
-          setQueueItems(prev => prev.filter(item => item.id !== (payload.old as { id: string }).id));
+          const deletedId = (payload.old as { id: string }).id;
+          setQueueItems(prev => {
+            const updated = prev.filter(item => item.id !== deletedId);
+            // If the deleted item was currently playing, advance to the next song
+            if (currentItemIdRef.current === deletedId) {
+              if (updated.length > 0) {
+                const next = updated[0];
+                setCurrentVideoId(next.video_id);
+                setCurrentItemId(next.id);
+                currentItemIdRef.current = next.id;
+              } else {
+                setCurrentVideoId(null);
+                setCurrentItemId(null);
+                currentItemIdRef.current = null;
+              }
+            }
+            return updated;
+          });
         }
       )
       .subscribe();
