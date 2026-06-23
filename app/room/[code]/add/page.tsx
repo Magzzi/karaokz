@@ -284,47 +284,40 @@ export default function AddSongPage({ params }: { params: Promise<{ code: string
                   </div>
                 )}
 
-                <AnimatePresence>
-                  {results.length > 0 && (
-                    <motion.div
-                      ref={resultsRef}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="mt-3 space-y-2"
-                    >
-                      {results.map((video) => (
-                        <div
-                          key={video.id}
-                          className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 active:bg-muted/80 transition-colors"
-                        >
-                          <img
-                            src={video.thumbnail}
-                            alt={video.title}
-                            className="w-16 h-10 object-cover rounded shrink-0"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-mono text-xs font-semibold text-foreground leading-tight truncate">
-                              {video.title}
-                            </h4>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[10px] text-muted-foreground truncate">{video.channelName}</span>
-                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-mono shrink-0">
-                                {video.duration}
-                              </Badge>
-                            </div>
+                {results.length > 0 && (
+                  <div ref={resultsRef} className="mt-3 space-y-2">
+                    {results.map((video) => (
+                      <div
+                        key={video.id}
+                        className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 active:bg-muted/80 transition-colors"
+                      >
+                        <img
+                          src={video.thumbnail}
+                          alt={video.title}
+                          className="w-16 h-10 object-cover rounded shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-mono text-xs font-semibold text-foreground leading-tight truncate">
+                            {video.title}
+                          </h4>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] text-muted-foreground truncate">{video.channelName}</span>
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-mono shrink-0">
+                              {video.duration}
+                            </Badge>
                           </div>
-                          <Button
-                            size="sm"
-                            onClick={() => handleAdd(video)}
-                            className="w-9 h-9 p-0 bg-primary hover:bg-primary/90 shrink-0 rounded-lg"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
                         </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                        <Button
+                          size="sm"
+                          onClick={() => handleAdd(video)}
+                          className="w-9 h-9 p-0 bg-primary hover:bg-primary/90 shrink-0 rounded-lg"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </motion.div>
             )}
 
