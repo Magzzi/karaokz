@@ -6,7 +6,9 @@ import YouTubePlayer from '@/components/YouTubePlayer';
 import YouTubeSearch from '@/components/YouTubeSearch';
 import Queue from '@/components/Queue';
 import { QueueItem, YouTubeVideo } from '@/types/youtube';
-import { Music, Settings } from 'lucide-react';
+import { Music, Settings, Users } from 'lucide-react';
+import QuotaDisplay from '@/components/QuotaDisplay';
+import CreateRoomDialog from '@/components/CreateRoomDialog';
 
 const STORAGE_KEY = 'karaoke-state';
 
@@ -19,6 +21,7 @@ export default function Home() {
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
   const [currentQueueId, setCurrentQueueId] = useState<string | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [showCreateRoom, setShowCreateRoom] = useState(false);
 
   // Load state from localStorage on mount
   useEffect(() => {
@@ -138,9 +141,20 @@ export default function Home() {
                 KaraOkz
               </h1>
             </div>
-            <button className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-              <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </button>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <QuotaDisplay />
+              <button
+                onClick={() => setShowCreateRoom(true)}
+                className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-colors font-mono text-[10px] sm:text-xs"
+              >
+                <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                <span className="hidden sm:inline">Room</span>
+              </button>
+              <button className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              </button>
+            </div>
+            {showCreateRoom && <CreateRoomDialog onClose={() => setShowCreateRoom(false)} />}
           </div>
         </div>
       </motion.header>
