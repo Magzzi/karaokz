@@ -163,8 +163,6 @@ export default function Home() {
                 <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
             </div>
-            {showCreateRoom && <CreateRoomDialog onClose={() => setShowCreateRoom(false)} />}
-            {showJoinRoom && <JoinRoomDialog onClose={() => setShowJoinRoom(false)} />}
           </div>
         </div>
       </motion.header>
@@ -221,6 +219,10 @@ export default function Home() {
           </p>
         </div>
       </motion.footer>
+
+      {/* Dialogs — rendered outside any transformed element to avoid stacking context issues */}
+      {showCreateRoom && <CreateRoomDialog onClose={() => setShowCreateRoom(false)} />}
+      {showJoinRoom && <JoinRoomDialog onClose={() => setShowJoinRoom(false)} />}
     </div>
   );
 }
