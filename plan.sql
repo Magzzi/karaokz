@@ -87,6 +87,14 @@ create policy "queue_items_delete" on queue_items
   for delete using (true);
 
 -- ============================================================
+-- TABLE-LEVEL GRANTS
+-- RLS policies control which rows; these grants allow the role
+-- to access the tables at all. Both are required.
+-- ============================================================
+grant select, insert, update, delete on table public.rooms       to anon, authenticated;
+grant select, insert, update, delete on table public.queue_items to anon, authenticated;
+
+-- ============================================================
 -- REALTIME
 -- PC receives instant updates when a phone adds a song.
 -- ============================================================
@@ -108,19 +116,19 @@ declare
     'STAR','NEON','WAVE','LUNA','NOVA','ARIA','LYRA','RIFF',
     'DUSK','GLOW','HYPE','KAZE','MUSE','VOLT','ZEAL','APEX'
   ];
-  code     text;
+  v_code   text;
   attempts int := 0;
 begin
   loop
-    code := words[1 + floor(random() * array_length(words, 1))::int]
-            || '-'
-            || lpad(floor(random() * 100)::text, 2, '0');
+    v_code := words[1 + floor(random() * array_length(words, 1))::int]
+              || '-'
+              || lpad(floor(random() * 100)::text, 2, '0');
 
     if not exists (
       select 1 from rooms
-      where rooms.code = code and is_active = true
+      where rooms.code = v_code and is_active = true
     ) then
-      return code;
+      return v_code;
     end if;
 
     attempts := attempts + 1;

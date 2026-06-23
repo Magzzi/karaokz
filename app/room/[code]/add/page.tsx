@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState, useEffect, useCallback } from 'react';
+import { use, useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,14 @@ export default function AddSongPage({ params }: { params: Promise<{ code: string
   // Added feedback
   const [lastAdded, setLastAdded] = useState<string | null>(null);
 
+  // Scroll results into view when they arrive (dismisses keyboard too)
+  const resultsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (results.length > 0) {
+      setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+  }, [results]);
+
   useEffect(() => {
     const stored = localStorage.getItem(singerKey) ?? '';
     setSingerName(stored);
@@ -73,6 +81,8 @@ export default function AddSongPage({ params }: { params: Promise<{ code: string
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
+    // Dismiss mobile keyboard so results are visible
+    (e.currentTarget as HTMLFormElement).querySelector('input')?.blur();
     setSearchLoading(true);
     setSearchError(null);
     setResults([]);
@@ -277,9 +287,10 @@ export default function AddSongPage({ params }: { params: Promise<{ code: string
                 <AnimatePresence>
                   {results.length > 0 && (
                     <motion.div
+                      ref={resultsRef}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="mt-3 space-y-2 max-h-72 overflow-y-auto"
+                      className="mt-3 space-y-2"
                     >
                       {results.map((video) => (
                         <div

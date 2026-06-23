@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 # frontend format md
 *.md
+
+#sql
+*.sql
+plan.sql
