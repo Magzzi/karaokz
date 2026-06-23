@@ -72,13 +72,17 @@ export default function AddSongPage({ params }: { params: Promise<{ code: string
         const item = payload.new as RoomQueueItem;
         setQueueItems(prev => [...prev, item].sort((a, b) => a.position - b.position));
       })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'queue_items', filter: `room_id=eq.${room.id}` }, (payload) => {
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'queue_items' }, (payload) => {
         const item = payload.new as RoomQueueItem;
+        if (item.room_id !== room.id) return;
         setQueueItems(prev => prev.map(i => i.id === item.id ? item : i).sort((a, b) => a.position - b.position));
       })
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'queue_items', filter: `room_id=eq.${room.id}` }, (payload) => {
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'queue_items' }, (payload) => {
         const old = payload.old as { id: string };
-        setQueueItems(prev => prev.filter(i => i.id !== old.id));
+        setQueueItems(prev => {
+          if (!prev.some(i => i.id === old.id)) return prev;
+          return prev.filter(i => i.id !== old.id);
+        });
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };

@@ -87,18 +87,22 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'queue_items', filter: `room_id=eq.${room.id}` },
+        { event: 'UPDATE', schema: 'public', table: 'queue_items' },
         (payload) => {
           const updated = payload.new as RoomQueueItem;
+          // Only process items belonging to this room
+          if (updated.room_id !== room.id) return;
           setQueueItems(prev => prev.map(i => i.id === updated.id ? updated : i).sort((a, b) => a.position - b.position));
         }
       )
       .on(
         'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'queue_items', filter: `room_id=eq.${room.id}` },
+        { event: 'DELETE', schema: 'public', table: 'queue_items' },
         (payload) => {
           const deletedId = (payload.old as { id: string }).id;
           setQueueItems(prev => {
+            // Only process items that were in this room's queue
+            if (!prev.some(item => item.id === deletedId)) return prev;
             const updated = prev.filter(item => item.id !== deletedId);
             // If the deleted item was currently playing, advance to the next song
             if (currentItemIdRef.current === deletedId) {
