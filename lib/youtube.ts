@@ -1,6 +1,6 @@
 import { YouTubeVideo, YouTubeSearchResponse, YouTubeVideoDetailsResponse } from '@/types/youtube';
 import { addQuotaUsage, QUOTA_COST } from '@/lib/quota';
-import { ALLOWED_CHANNELS, ALLOWED_CHANNEL_NAMES, isAllowedChannel, isFullTrack, isoDurationSeconds, normalizeTitle } from '@/lib/sources';
+import { ALLOWED_CHANNELS, ALLOWED_CHANNEL_NAMES, channelName, isAllowedChannel, isFullTrack, isoDurationSeconds, normalizeTitle } from '@/lib/sources';
 
 const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
@@ -39,7 +39,12 @@ function parseApiError(status: number, body: { error?: { errors?: { reason?: str
 export async function searchYouTubeVideos(query: string): Promise<YouTubeVideo[]> {
   if (!YOUTUBE_API_KEY) throw new Error('KEY_MISSING');
   const perChannel = await Promise.all(ALLOWED_CHANNELS.map(c => searchChannel(query, c.id, YOUTUBE_API_KEY)));
-  return perChannel.flat();
+  // Interleave so each channel's best matches come first
+  const merged: YouTubeVideo[] = [];
+  for (let i = 0; i < Math.max(...perChannel.map(r => r.length)); i++) {
+    for (const results of perChannel) if (results[i]) merged.push(results[i]);
+  }
+  return merged;
 }
 
 async function searchChannel(query: string, channelId: string, key: string): Promise<YouTubeVideo[]> {
@@ -87,7 +92,7 @@ async function searchChannel(query: string, channelId: string, key: string): Pro
     .map(({ item, iso }) => ({
       id: item.id.videoId,
       title: normalizeTitle(item.snippet.title, item.snippet.channelId),
-      channelName: item.snippet.channelTitle,
+      channelName: channelName(item.snippet.channelId, item.snippet.channelTitle),
       thumbnail: item.snippet.thumbnails.medium.url,
       duration: parseDuration(iso),
     }));
@@ -120,7 +125,7 @@ export async function fetchVideoById(videoId: string): Promise<YouTubeVideo | nu
   return {
     id: videoId,
     title: normalizeTitle(item.snippet.title, item.snippet.channelId),
-    channelName: item.snippet.channelTitle,
+    channelName: channelName(item.snippet.channelId, item.snippet.channelTitle),
     thumbnail:
       item.snippet.thumbnails.medium?.url ||
       item.snippet.thumbnails.default?.url ||

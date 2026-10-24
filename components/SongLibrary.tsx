@@ -4,10 +4,11 @@ import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Check, Heart, Link2, Loader2, Plus, Search, X } from 'lucide-react';
 import { searchYouTubeVideos, fetchVideoById, extractVideoId, getApiErrorMessage } from '@/lib/youtube';
 import { ALLOWED_CHANNEL_NAMES, splitTitle } from '@/lib/sources';
+import { closestMatches } from '@/lib/search';
 import { useFavorites } from '@/lib/favorites';
 import { YouTubeVideo } from '@/types/youtube';
 
-// Quick searches inside the allowed channels (each costs one search)
+// Quick searches inside the allowed channels (each costs one search per channel)
 const PRESETS = ['OPM', 'Duet', 'Love Songs', '90s', 'Rock'];
 
 type View = { kind: 'favorites' } | { kind: 'search'; label: string } | { kind: 'url' };
@@ -39,14 +40,17 @@ export default function SongLibrary({ onAdd, layout = 'panel' }: SongLibraryProp
     return () => clearTimeout(t);
   }, [results, layout]);
 
-  const runSearch = async (q: string, label: string) => {
+  // Typed searches keep only the 5-10 closest titles; preset chips aren't
+  // song names, so they keep YouTube's relevance order instead
+  const runSearch = async (q: string, label: string, rank = true) => {
     if (!q.trim()) return;
     setView({ kind: 'search', label });
     setLoading(true);
     setError(null);
     setResults([]);
     try {
-      const videos = await searchYouTubeVideos(q);
+      const found = await searchYouTubeVideos(q);
+      const videos = rank ? closestMatches(q, found) : found.slice(0, 10);
       setResults(videos);
       if (!videos.length) setError({ message: `No ${ALLOWED_CHANNEL_NAMES} songs found.`, isQuotaError: false });
     } catch (err) {
@@ -145,7 +149,7 @@ export default function SongLibrary({ onAdd, layout = 'panel' }: SongLibraryProp
               <Heart className={`h-3.5 w-3.5 ${view.kind === 'favorites' ? 'fill-current' : ''}`} /> Favorites
             </Chip>
             {PRESETS.map(p => (
-              <Chip key={p} active={view.kind === 'search' && view.label === p} onClick={() => runSearch(p, p)}>
+              <Chip key={p} active={view.kind === 'search' && view.label === p} onClick={() => runSearch(p, p, false)}>
                 {p}
               </Chip>
             ))}
@@ -229,7 +233,7 @@ function SongRow({ video, added, favorite, onAdd, onToggleFavorite }: {
           <p className="font-semibold leading-tight line-clamp-2">{song}</p>
           <p className="text-sm text-muted-foreground truncate">
             {artist ?? video.channelName}
-            <span className="opacity-60"> · {video.duration}</span>
+            <span className="opacity-60"> · {video.duration}{artist && ` · ${video.channelName}`}</span>
           </p>
         </div>
       </button>

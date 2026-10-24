@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { decodeEntities, isAllowedChannel, isFullTrack, isoDurationSeconds, normalizeTitle, splitTitle } from './sources.ts';
 
 const COVERSPH = 'UCaPwSXblS8F0owlKHGc6huw';
+const ATOMIC = 'UCutZyApGOjqhOS-pp7yAj4Q';
+const BRIANS = 'UCV73Junoi3z_fXpcF0a8xow';
 
 test('normalizeTitle flips CoversPH "SONG - Artist" and un-shouts it', () => {
   assert.equal(normalizeTitle('IKAW AT AKO - Johnoy Danao (KARAOKE VERSION)', COVERSPH), 'Johnoy Danao - Ikaw At Ako');
@@ -65,8 +67,26 @@ test('decodeEntities unescapes API titles', () => {
   assert.equal(decodeEntities('Guns N&#39; Roses &amp; Friends'), "Guns N' Roses & Friends");
 });
 
-test('only CoversPH is allowed', () => {
+test('Atomic Karaoke titles: "SONG -  Artist (HD Karaoke)"', () => {
+  assert.equal(normalizeTitle('MISS KITA -  J Brothers (HD Karaoke)', ATOMIC), 'J Brothers - Miss Kita');
+  assert.equal(normalizeTitle("SANA'Y MAGBALIK - Jovit Baldivino (HD Karaoke)", ATOMIC), "Jovit Baldivino - Sana'y Magbalik");
+  assert.equal(normalizeTitle('HULING EL BIMBO - Eraserheads (HD Karaoke)', ATOMIC), 'Eraserheads - Huling El Bimbo');
+});
+
+test("Brian's Videoke titles: \"Song - Artist (Karaoke)\"", () => {
+  assert.equal(normalizeTitle('Kahit Sa Panaginip - December Avenue (Karaoke)', BRIANS), 'December Avenue - Kahit Sa Panaginip');
+  assert.equal(normalizeTitle('Wild Wild Love - Pitbull Ft. GRL (Karaoke)', BRIANS), 'Pitbull Ft. GRL - Wild Wild Love');
+  assert.equal(normalizeTitle("I'm Like A Bird - Nelly Furtado (Karaoke)", BRIANS), "Nelly Furtado - I'm Like A Bird");
+  // Dash missing a space on one side, hyphenated words kept whole
+  assert.equal(normalizeTitle('Sana Pinatay Mo Na Lang Ako- Kimpoy Feliciano (Karaoke)', BRIANS), 'Kimpoy Feliciano - Sana Pinatay Mo Na Lang Ako');
+  assert.equal(normalizeTitle('Tadhana (Ilumina OST)- Up Dharma Down (Karaoke)', BRIANS), 'Up Dharma Down - Tadhana (Ilumina OST)');
+  assert.equal(normalizeTitle('Wala Na Bang Pag-ibig - Jaya (Karaoke)', BRIANS), 'Jaya - Wala Na Bang Pag-ibig');
+});
+
+test('only the listed channels are allowed', () => {
   assert.equal(isAllowedChannel(COVERSPH), true);
+  assert.equal(isAllowedChannel(ATOMIC), true);
+  assert.equal(isAllowedChannel(BRIANS), true);
   assert.equal(isAllowedChannel('UCwTRjvjVge51X-ILJ4i22ew'), false); // Sing King
 });
 

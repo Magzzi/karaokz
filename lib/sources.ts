@@ -6,13 +6,23 @@ type TitleOrder = 'artist-song' | 'song-artist';
 // titleOrder says how the channel writes titles: "Artist - Song" or "SONG - Artist".
 export const ALLOWED_CHANNELS: readonly { id: string; name: string; titleOrder: TitleOrder }[] = [
   { id: 'UCaPwSXblS8F0owlKHGc6huw', name: 'CoversPH', titleOrder: 'song-artist' },
+  { id: 'UCutZyApGOjqhOS-pp7yAj4Q', name: 'Atomic Karaoke', titleOrder: 'song-artist' },
+  { id: 'UCV73Junoi3z_fXpcF0a8xow', name: "Brian's Videoke", titleOrder: 'song-artist' },
 ];
 
 export function isAllowedChannel(channelId: string): boolean {
   return ALLOWED_CHANNELS.some(c => c.id === channelId);
 }
 
-export const ALLOWED_CHANNEL_NAMES = ALLOWED_CHANNELS.map(c => c.name).join(' and ');
+// Our display name for a channel ("Atomic Karaoke", not "Atomic Karaoke... ")
+export function channelName(channelId: string, fallback: string): string {
+  return ALLOWED_CHANNELS.find(c => c.id === channelId)?.name ?? fallback;
+}
+
+export const ALLOWED_CHANNEL_NAMES =
+  ALLOWED_CHANNELS.length > 1
+    ? `${ALLOWED_CHANNELS.slice(0, -1).map(c => c.name).join(', ')} and ${ALLOWED_CHANNELS.at(-1)!.name}`
+    : ALLOWED_CHANNELS[0].name;
 
 const ENTITIES: Record<string, string> = {
   '&amp;': '&',
@@ -56,7 +66,8 @@ export function normalizeTitle(raw: string, channelId: string): string {
     .replace(/\s+/g, ' ')
     .trim();
 
-  let parts = text.split(/\s+[-–]\s+/).map(p => p.trim()).filter(Boolean);
+  // A dash needs a space on at least one side ("Ako- Kimpoy"), so "Pag-ibig" stays whole
+  let parts = text.split(/\s+[-–]\s*|\s*[-–]\s+/).map(p => p.trim()).filter(Boolean);
   // No dash: "SONG IN CAPS Artist Name" still splits where the caps end
   if (parts.length < 2 && order === 'song-artist') {
     const m = text.match(/^([^a-z]+?)\s+(\p{Lu}\p{Ll}.*)$/u);
