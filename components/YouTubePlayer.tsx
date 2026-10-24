@@ -173,12 +173,18 @@ export default function YouTubePlayer({ videoId, volume, rate, singerName, onVid
   return (
     <div
       ref={frameRef}
-      className="relative w-full aspect-video rounded-[1.4rem] p-1.5 bg-gradient-to-b from-[#2a3170] to-[#0d1030] shadow-[0_30px_60px_-20px_rgb(0_0_0/0.9),0_0_0_1px_rgb(130_150_255/0.2)]"
+      className="group relative w-full aspect-video rounded-[1.4rem] p-1.5 bg-gradient-to-b from-[#2a3170] to-[#0d1030] shadow-[0_30px_60px_-20px_rgb(0_0_0/0.9),0_0_0_1px_rgb(130_150_255/0.2)]"
     >
       <div className="relative h-full w-full overflow-hidden rounded-[1.1rem] bg-black">
         {videoId ? (
           <>
             <div ref={hostRef} className="absolute inset-0 [&>iframe]:h-full [&>iframe]:w-full" />
+            {/* The iframe swallows mouse events, so this layer catches hover
+                (to reveal the progress bar) and clicks (to pause/resume) */}
+            <div
+              className="absolute inset-0 cursor-pointer"
+              onClick={() => (status.playing ? playerRef.current?.pauseVideo?.() : playerRef.current?.playVideo?.())}
+            />
 
             {blocked && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#090b22]/95 text-center px-6">
@@ -197,8 +203,15 @@ export default function YouTubePlayer({ videoId, volume, rate, singerName, onVid
               </div>
             )}
 
-            {/* Progress + fullscreen */}
-            <div className="absolute inset-x-0 bottom-0 px-4 pb-3 pt-10 bg-gradient-to-t from-black/80 to-transparent flex items-center gap-3">
+            {/* Progress + fullscreen: hidden while playing so the video stays clean;
+                shown on hover, keyboard focus, when paused, and always on touch screens */}
+            <div
+              className={`absolute inset-x-0 bottom-0 px-4 pb-3 pt-10 bg-gradient-to-t from-black/80 to-transparent flex items-center gap-3 transition-opacity duration-300 ${
+                status.playing
+                  ? 'opacity-0 group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100'
+                  : 'opacity-100'
+              }`}
+            >
               <div className="group relative flex-1 h-4 flex items-center cursor-pointer" onClick={seek}>
                 <div className="h-1.5 w-full rounded-full bg-white/20 overflow-hidden">
                   <div className="h-full rounded-full bg-gradient-to-r from-neon-cyan to-[#5ad1ff]" style={{ width: `${pct}%` }} />
