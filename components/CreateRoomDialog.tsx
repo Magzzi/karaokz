@@ -44,7 +44,7 @@ export default function CreateRoomDialog({ onClose }: CreateRoomDialogProps) {
       />
 
       <motion.div
-        className="relative glass rounded-xl p-6 w-full max-w-sm border border-border/50 z-10"
+        className="relative glass rounded-3xl p-7 w-full max-w-sm border border-border/50 z-10"
         initial={{ opacity: 0, scale: 0.95, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.2 }}
@@ -57,12 +57,12 @@ export default function CreateRoomDialog({ onClose }: CreateRoomDialogProps) {
         </button>
 
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-9 h-9 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
-            <Users className="h-4 w-4 text-primary" />
+          <div className="w-11 h-11 rounded-xl bg-neon-pink/15 border border-neon-pink/40 flex items-center justify-center shrink-0">
+            <Users className="h-5 w-5 text-neon-pink" />
           </div>
           <div>
-            <h2 className="font-mono font-bold text-foreground text-sm">Create Karaoke Room</h2>
-            <p className="text-[10px] text-muted-foreground font-mono">
+            <h2 className="font-bold text-foreground text-lg">Create Karaoke Room</h2>
+            <p className="text-sm text-muted-foreground">
               Guests add songs from their phone
             </p>
           </div>
@@ -70,7 +70,7 @@ export default function CreateRoomDialog({ onClose }: CreateRoomDialogProps) {
 
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
-            <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">
+            <label className="text-xs text-muted-foreground uppercase tracking-wider">
               Your Name (Host)
             </label>
             <Input
@@ -78,18 +78,18 @@ export default function CreateRoomDialog({ onClose }: CreateRoomDialogProps) {
               value={hostName}
               onChange={(e) => setHostName(e.target.value)}
               placeholder="e.g. John Doe"
-              className="mt-1.5 bg-muted border-border/50 font-mono text-sm h-10"
+              className="mt-1.5 bg-black/25 border-white/10 text-base h-12 rounded-xl"
             />
           </div>
 
           {error && (
-            <p className="text-xs text-destructive font-mono">{error}</p>
+            <p className="text-xs text-destructive">{error}</p>
           )}
 
           <Button
             type="submit"
             disabled={!hostName.trim() || loading}
-            className="w-full bg-primary hover:bg-primary/90 font-mono h-10"
+            className="w-full h-12 rounded-xl text-base font-semibold text-white bg-gradient-to-b from-[#ff4f9d] to-[#e8146d] neon-pink-glow hover:opacity-95"
           >
             {loading
               ? <Loader2 className="h-4 w-4 animate-spin" />

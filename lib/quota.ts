@@ -3,7 +3,7 @@ export const DAILY_LIMIT = 10_000;
 
 // Cost per operation (YouTube Data API v3)
 export const QUOTA_COST = {
-  search: 101,  // search.list (100) + videos.list (1)
+  search: 101,  // search.list (100) + videos.list (1), per allowed channel
   videoFetch: 1, // videos.list for a single ID
 } as const;
 

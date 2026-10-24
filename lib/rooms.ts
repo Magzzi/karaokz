@@ -86,6 +86,14 @@ export async function moveQueueItem(
   ]);
 }
 
+// Host only: flags the song it is playing so guests see (and can skip) the right one
+export async function markPlaying(roomId: string, itemId: string | null): Promise<void> {
+  let clear = supabase.from('queue_items').update({ is_playing: false }).eq('room_id', roomId).eq('is_playing', true);
+  if (itemId) clear = clear.neq('id', itemId);
+  await clear;
+  if (itemId) await supabase.from('queue_items').update({ is_playing: true }).eq('id', itemId);
+}
+
 export async function touchRoom(roomId: string): Promise<void> {
   await supabase.rpc('touch_room', { p_room_id: roomId });
 }

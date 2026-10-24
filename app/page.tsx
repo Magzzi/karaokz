@@ -1,39 +1,47 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import YouTubePlayer from '@/components/YouTubePlayer';
-import YouTubeSearch from '@/components/YouTubeSearch';
-import Queue from '@/components/Queue';
-import { QueueItem, YouTubeVideo } from '@/types/youtube';
-import { Music, Settings, Users, Hash } from 'lucide-react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { Hash, Users } from 'lucide-react';
+import YouTubePlayer, { type PlayerHandle, type PlayerStatus } from '@/components/YouTubePlayer';
+import SongLibrary from '@/components/SongLibrary';
+import QueueList from '@/components/QueueList';
+import NowSinging from '@/components/NowSinging';
+import ControlBar from '@/components/ControlBar';
+import StageShell from '@/components/StageShell';
+import UpNext from '@/components/UpNext';
 import QuotaDisplay from '@/components/QuotaDisplay';
 import CreateRoomDialog from '@/components/CreateRoomDialog';
 import JoinRoomDialog from '@/components/JoinRoomDialog';
+import { QueueItem, YouTubeVideo } from '@/types/youtube';
 
 const STORAGE_KEY = 'karaoke-state';
+const IDLE: PlayerStatus = { playing: false, time: 0, duration: 0 };
 
 /**
- * Main Karaoke App Page
- * Manages the queue, current playing video, and search functionality
+ * Solo mode: a single-screen queue kept in this browser.
+ * Rooms (multi-device) live under /room/[code].
  */
 export default function Home() {
   const [queue, setQueue] = useState<QueueItem[]>([]);
-  const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
   const [currentQueueId, setCurrentQueueId] = useState<string | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
   const [showJoinRoom, setShowJoinRoom] = useState(false);
+  const [volume, setVolume] = useState(80);
+  const [rate, setRate] = useState(1);
+  const [player, setPlayer] = useState<PlayerStatus>(IDLE);
+  const [sung, setSung] = useState(0);
+  const playerRef = useRef<PlayerHandle>(null);
 
   // Load state from localStorage on mount
   useEffect(() => {
     try {
-      const savedState = localStorage.getItem(STORAGE_KEY);
-      if (savedState) {
-        const { queue: savedQueue, currentVideoId: savedVideoId, currentQueueId: savedQueueId } = JSON.parse(savedState);
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const { queue: savedQueue, currentQueueId: savedId } = JSON.parse(saved);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore after hydration
         setQueue(savedQueue || []);
-        setCurrentVideoId(savedVideoId || null);
-        setCurrentQueueId(savedQueueId || null);
+        setCurrentQueueId(savedId || null);
       }
     } catch (error) {
       console.error('Failed to load saved state:', error);
@@ -41,188 +49,124 @@ export default function Home() {
     setIsHydrated(true);
   }, []);
 
-  // Save state to localStorage whenever it changes
   useEffect(() => {
-    if (!isHydrated) return; // Don't save during initial hydration
-    
+    if (!isHydrated) return;
     try {
-      const state = {
-        queue,
-        currentVideoId,
-        currentQueueId,
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ queue, currentQueueId }));
     } catch (error) {
       console.error('Failed to save state:', error);
     }
-  }, [queue, currentVideoId, currentQueueId, isHydrated]);
+  }, [queue, currentQueueId, isHydrated]);
 
-  /**
-   * Add a video to the queue
-   */
+  const current = queue.find(item => item.queueId === currentQueueId) ?? null;
+
   const handleAddToQueue = useCallback((video: YouTubeVideo) => {
-    const queueItem: QueueItem = {
-      ...video,
-      queueId: `${video.id}-${Date.now()}`, // Unique queue ID
-    };
+    const item: QueueItem = { ...video, queueId: `${video.id}-${Date.now()}` };
+    setQueue(prev => [...prev, item]);
+    // Autoplay when nothing is playing
+    setCurrentQueueId(id => id ?? item.queueId);
+  }, []);
 
-    setQueue((prev) => {
-      // Only auto-play if queue is empty and no video is playing
-      if (prev.length === 0 && !currentVideoId) {
-        setCurrentVideoId(queueItem.id);
-        setCurrentQueueId(queueItem.queueId);
-      }
-      return [...prev, queueItem];
-    });
-  }, [currentVideoId]);
-
-  /**
-   * Play a specific song from the queue
-   */
-  const handlePlaySong = useCallback((queueId: string) => {
-    const song = queue.find((item) => item.queueId === queueId);
-    if (song) {
-      setCurrentVideoId(song.id);
-      setCurrentQueueId(queueId);
-    }
-  }, [queue]);
-
-  /**
-   * Remove a song from the queue
-   */
-  const handleRemoveSong = useCallback((queueId: string) => {
-    setQueue((prev) => prev.filter((item) => item.queueId !== queueId));
-
-    // If we removed the currently playing song, play the next one
-    if (currentQueueId === queueId) {
-      handleVideoEnd();
-    }
-  }, [currentQueueId]);
-
-  /**
-   * Handle video end - automatically play next song
-   */
-  const handleVideoEnd = useCallback(() => {
-    // Remove the finished song from queue
-    const currentIndex = queue.findIndex((item) => item.queueId === currentQueueId);
-    
-    if (currentIndex !== -1) {
-      // Remove current song
-      const updatedQueue = queue.filter((item) => item.queueId !== currentQueueId);
-      setQueue(updatedQueue);
-
-      // Play next song if available
-      if (updatedQueue.length > 0) {
-        const nextSong = updatedQueue[0]; // Always play first in queue
-        setCurrentVideoId(nextSong.id);
-        setCurrentQueueId(nextSong.queueId);
-      } else {
-        // Queue is empty
-        setCurrentVideoId(null);
-        setCurrentQueueId(null);
-      }
-    }
+  // Drop an item; if it was playing, the first remaining item takes over
+  const removeItem = useCallback((queueId: string) => {
+    const remaining = queue.filter(item => item.queueId !== queueId);
+    setQueue(remaining);
+    if (currentQueueId === queueId) setCurrentQueueId(remaining[0]?.queueId ?? null);
   }, [queue, currentQueueId]);
 
+  const finishSong = useCallback(() => {
+    if (!currentQueueId) return;
+    setSung(n => n + 1);
+    setPlayer(IDLE);
+    removeItem(currentQueueId);
+  }, [currentQueueId, removeItem]);
+
+  const moveItem = useCallback((queueId: string, direction: 'up' | 'down') => {
+    setQueue(prev => {
+      const idx = prev.findIndex(i => i.queueId === queueId);
+      const swap = direction === 'up' ? idx - 1 : idx + 1;
+      if (idx === -1 || swap < 0 || swap >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[swap]] = [next[swap], next[idx]];
+      return next;
+    });
+  }, []);
+
+  const next = queue.find(item => item.queueId !== currentQueueId) ?? null;
+  const live = current ? player : IDLE;
+
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden">
-      {/* Header */}
-      <motion.header 
-        className="glass border-b border-border/50 shrink-0"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 py-2 sm:py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                <Music className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-              </div>
-              <h1 className="text-base sm:text-lg font-bold text-foreground font-mono">
-                KaraOkz
-              </h1>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <QuotaDisplay />
-              <button
-                onClick={() => setShowJoinRoom(true)}
-                className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-muted border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors font-mono text-[10px] sm:text-xs"
-              >
-                <Hash className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                <span className="hidden sm:inline">Join</span>
-              </button>
-              <button
-                onClick={() => setShowCreateRoom(true)}
-                className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-colors font-mono text-[10px] sm:text-xs"
-              >
-                <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                <span className="hidden sm:inline">Room</span>
-              </button>
-              <button className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </motion.header>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-hidden p-2 sm:p-4 md:p-6">
-        <div className="max-w-7xl mx-auto h-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 h-full">
-            {/* Left Panel: Player (2 columns on desktop) */}
-            <motion.div 
-              className="md:col-span-2 lg:col-span-2 h-48 sm:h-64 md:h-80 lg:h-full"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.1 }}
+    <>
+      <StageShell
+        backdrop={current?.thumbnail}
+        actions={
+          <>
+            <div className="hidden sm:block"><QuotaDisplay /></div>
+            <button
+              onClick={() => setShowJoinRoom(true)}
+              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-sm font-medium hover:bg-white/10 transition-colors"
             >
-              <YouTubePlayer videoId={currentVideoId} onVideoEnd={handleVideoEnd} />
-            </motion.div>
-
-            {/* Right Panel: Search + Queue (1 column on desktop) */}
-            <motion.div 
-              className="md:col-span-2 lg:col-span-1 h-auto lg:h-full flex flex-col gap-2 sm:gap-4 overflow-hidden"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
+              <Hash className="h-4 w-4 text-neon-cyan" /> <span className="hidden sm:inline">Join room</span>
+            </button>
+            <button
+              onClick={() => setShowCreateRoom(true)}
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-b from-[#ff4f9d] to-[#e8146d] px-3.5 py-2 text-sm font-semibold text-white shadow-[0_0_16px_rgb(255_45_135/0.45)]"
             >
-              {/* Search */}
-              <YouTubeSearch onAddToQueue={handleAddToQueue} />
+              <Users className="h-4 w-4" /> <span className="hidden sm:inline">Start a room</span>
+            </button>
+          </>
+        }
+        library={<SongLibrary onAdd={handleAddToQueue} />}
+        stage={
+          <>
+            <YouTubePlayer
+              key={currentQueueId ?? 'idle'}
+              ref={playerRef}
+              videoId={current?.id ?? null}
+              volume={volume}
+              rate={rate}
+              onVideoEnd={finishSong}
+              onStatus={setPlayer}
+            />
+            <UpNext title={next?.title ?? null} hint="Start a room so friends can queue songs from their phones" />
+          </>
+        }
+        side={
+          <>
+            <NowSinging
+              title={current?.title ?? null}
+              thumbnail={current?.thumbnail ?? null}
+              time={live.time}
+              duration={live.duration}
+              stats={{ queued: queue.length, singers: 0, sung }}
+            />
+            <QueueList
+              entries={queue.map(item => ({ key: item.queueId, title: item.title, thumbnail: item.thumbnail }))}
+              currentKey={currentQueueId}
+              emptyHint="Pick songs from the library"
+              onPlay={setCurrentQueueId}
+              onMove={moveItem}
+              onRemove={removeItem}
+            />
+          </>
+        }
+        controls={
+          <ControlBar
+            hasSong={!!current}
+            playing={live.playing}
+            onToggle={() => (live.playing ? playerRef.current?.pause() : playerRef.current?.play())}
+            onNext={finishSong}
+            volume={volume}
+            onVolume={setVolume}
+            rate={rate}
+            onRate={setRate}
+          />
+        }
+      />
 
-              {/* Queue */}
-              <div className="flex-1 min-h-40 sm:min-h-48 lg:min-h-0 overflow-hidden">
-                <Queue
-                  queue={queue}
-                  currentVideoId={currentVideoId}
-                  onPlaySong={handlePlaySong}
-                  onRemoveSong={handleRemoveSong}
-                />
-              </div>
-            </motion.div>
-          </div>
-          
-        </div>
-      </main>
-
-      {/* Footer */}
-      <motion.footer 
-        className="glass border-t border-border/50 shrink-0"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3, delay: 0.3 }}
-      >
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 py-2 sm:py-3">
-          <p className="text-center text-[10px] sm:text-xs text-muted-foreground font-mono">
-            © {new Date().getFullYear()} Zio Magugat · Built with intention
-          </p>
-        </div>
-      </motion.footer>
-
-      {/* Dialogs — rendered outside any transformed element to avoid stacking context issues */}
+      {/* Dialogs sit outside the stage so transformed ancestors can't trap them */}
       {showCreateRoom && <CreateRoomDialog onClose={() => setShowCreateRoom(false)} />}
       {showJoinRoom && <JoinRoomDialog onClose={() => setShowJoinRoom(false)} />}
-    </div>
+    </>
   );
 }

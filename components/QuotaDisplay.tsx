@@ -1,36 +1,32 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Zap } from 'lucide-react';
 import { getQuota, resetQuota, getQuotaLevel, DAILY_LIMIT } from '@/lib/quota';
 
+function subscribe(onChange: () => void) {
+  window.addEventListener('quota-updated', onChange);
+  return () => window.removeEventListener('quota-updated', onChange);
+}
+
 export default function QuotaDisplay() {
-  const [used, setUsed] = useState(0);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const refresh = () => setUsed(getQuota().used);
-    refresh();
-    setMounted(true);
-    window.addEventListener('quota-updated', refresh);
-    return () => window.removeEventListener('quota-updated', refresh);
-  }, []);
-
-  if (!mounted) return null;
+  // null during server render; the count lives in this browser's localStorage
+  const used = useSyncExternalStore(subscribe, () => getQuota().used, () => null);
+  if (used === null) return null;
 
   const level = getQuotaLevel(used);
   const pct = Math.min((used / DAILY_LIMIT) * 100, 100);
 
   const colors = {
-    ok:       'text-primary border-primary/30 bg-primary/10',
-    warn:     'text-accent border-accent/30 bg-accent/10',
+    ok:       'text-neon-cyan border-neon-cyan/30 bg-neon-cyan/10',
+    warn:     'text-neon-orange border-neon-orange/30 bg-neon-orange/10',
     critical: 'text-destructive border-destructive/30 bg-destructive/10',
   };
 
   const barColors = {
     ok:       'bg-primary',
-    warn:     'bg-accent',
+    warn:     'bg-neon-orange',
     critical: 'bg-destructive',
   };
 
@@ -44,7 +40,7 @@ export default function QuotaDisplay() {
           }
         }}
         title="YouTube API quota estimate — click to reset counter"
-        className={`flex items-center gap-1 px-2 py-0.5 rounded-full border font-mono text-[10px] transition-colors ${colors[level]}`}
+        className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs tabular-nums transition-colors ${colors[level]}`}
         whileTap={{ scale: 0.95 }}
       >
         {level === 'ok'
@@ -71,7 +67,7 @@ export default function QuotaDisplay() {
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
-            className="text-[9px] text-destructive font-mono"
+            className="text-[9px] text-destructive"
           >
             Quota nearly full — use URL tab
           </motion.p>

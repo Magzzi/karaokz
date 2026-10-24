@@ -19,6 +19,7 @@ export interface YouTubeSearchResponse {
     };
     snippet: {
       title: string;
+      channelId: string;
       channelTitle: string;
       thumbnails: {
         medium: {
@@ -31,6 +32,7 @@ export interface YouTubeSearchResponse {
 
 export interface YouTubeVideoDetailsResponse {
   items: Array<{
+    id: string;
     contentDetails: {
       duration: string;
     };

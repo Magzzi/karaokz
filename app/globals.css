@@ -6,8 +6,13 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-sans: var(--font-rubik), system-ui, sans-serif;
+  --font-display: var(--font-rubik), system-ui, sans-serif;
+  --color-neon-pink: var(--neon-pink);
+  --color-neon-cyan: var(--neon-cyan);
+  --color-neon-orange: var(--neon-orange);
+  --color-neon-green: var(--neon-green);
+  --color-neon-violet: var(--neon-violet);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -47,82 +52,138 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
-/* Dark theme by default - following FRONTEND_FORMAT */
 :root {
-  --radius: 0.625rem;
-  /* Core Colors from FRONTEND_FORMAT */
-  --background: hsl(220 17% 10%);
-  --foreground: hsl(210 20% 90%);
-  --card: hsl(230 15% 7%);
-  --card-foreground: hsl(210 20% 90%);
-  --popover: hsl(230 15% 7%);
-  --popover-foreground: hsl(210 20% 90%);
-  --primary: hsl(150 58% 41%);
-  --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(155 38% 18%);
-  --secondary-foreground: hsl(210 20% 90%);
-  --muted: hsl(230 15% 12%);
-  --muted-foreground: hsl(215 15% 55%);
-  --accent: hsl(44 91% 47%);
-  --accent-foreground: hsl(0 0% 10%);
-  --interactive: hsl(200 93% 50%);
-  --destructive: hsl(0 84.2% 60.2%);
-  --border: hsl(220 15% 18%);
-  --input: hsl(230 15% 12%);
-  --ring: hsl(150 58% 41%);
-  --chart-1: hsl(150 58% 41%);
-  --chart-2: hsl(155 38% 18%);
-  --chart-3: hsl(44 91% 47%);
-  --chart-4: hsl(200 93% 50%);
-  --chart-5: hsl(0 84.2% 60.2%);
-  --sidebar: hsl(230 15% 7%);
-  --sidebar-foreground: hsl(210 20% 90%);
-  --sidebar-primary: hsl(150 58% 41%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(155 38% 18%);
-  --sidebar-accent-foreground: hsl(210 20% 90%);
-  --sidebar-border: hsl(220 15% 18%);
-  --sidebar-ring: hsl(150 58% 41%);
+  color-scheme: dark;
+  --radius: 0.875rem;
+
+  /* Neon karaoke-bar palette */
+  --neon-pink: #ff2d87;
+  --neon-cyan: #1fb8ff;
+  --neon-orange: #ff9a2e;
+  --neon-green: #3ee27f;
+  --neon-violet: #8b5cf6;
+
+  --background: #070818;
+  --foreground: #eef1ff;
+  --card: #111536;
+  --card-foreground: #eef1ff;
+  --popover: #141a40;
+  --popover-foreground: #eef1ff;
+  --primary: var(--neon-cyan);
+  --primary-foreground: #03111f;
+  --secondary: #1d2452;
+  --secondary-foreground: #dfe4ff;
+  --muted: #171c44;
+  --muted-foreground: #8f97c9;
+  --accent: var(--neon-pink);
+  --accent-foreground: #ffffff;
+  --interactive: var(--neon-cyan);
+  --destructive: #ff4d6d;
+  --border: rgb(130 150 255 / 0.14);
+  --input: #151a3f;
+  --ring: var(--neon-cyan);
+  --chart-1: var(--neon-cyan);
+  --chart-2: var(--neon-pink);
+  --chart-3: var(--neon-orange);
+  --chart-4: var(--neon-green);
+  --chart-5: var(--neon-violet);
+  --sidebar: #111536;
+  --sidebar-foreground: #eef1ff;
+  --sidebar-primary: var(--neon-cyan);
+  --sidebar-primary-foreground: #03111f;
+  --sidebar-accent: #1d2452;
+  --sidebar-accent-foreground: #eef1ff;
+  --sidebar-border: rgb(130 150 255 / 0.14);
+  --sidebar-ring: var(--neon-cyan);
 }
 
-/* Glass effect utility */
+/* Frosted navy panel, the main surface of the stage */
+.panel {
+  background: linear-gradient(180deg, rgb(24 29 68 / 0.82), rgb(11 13 34 / 0.88));
+  border: 1px solid rgb(130 150 255 / 0.14);
+  border-radius: 1.25rem;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.05),
+    0 24px 48px -24px rgb(0 0 0 / 0.8);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* Inner tile inside a panel */
+.tile {
+  background: rgb(255 255 255 / 0.035);
+  border: 1px solid rgb(130 150 255 / 0.1);
+  border-radius: 0.9rem;
+}
+
+/* Kept for dialogs */
 .glass {
-  background: hsl(230 15% 7% / 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid hsl(220 15% 18% / 0.5);
+  background: linear-gradient(180deg, rgb(24 29 68 / 0.92), rgb(11 13 34 / 0.95));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgb(130 150 255 / 0.16);
 }
 
-/* Glow effects */
-.glow-primary {
-  box-shadow: 0 0 20px hsl(150 58% 41% / 0.15);
+.neon-cyan-ring {
+  border-color: rgb(31 184 255 / 0.85);
+  box-shadow: 0 0 0 1px rgb(31 184 255 / 0.35), 0 0 18px rgb(31 184 255 / 0.35), inset 0 0 14px rgb(31 184 255 / 0.12);
 }
 
-.glow-accent {
-  box-shadow: 0 0 20px hsl(44 91% 47% / 0.15);
+.neon-pink-glow {
+  box-shadow: 0 0 24px rgb(255 45 135 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.25);
 }
 
-/* Text selection */
+.neon-text-pink {
+  filter: drop-shadow(0 0 10px rgb(255 45 135 / 0.55));
+}
+
+/* Range slider with a coloured fill up to --pct */
+.neon-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--range-color) var(--pct), rgb(255 255 255 / 0.12) var(--pct));
+  outline: none;
+  cursor: pointer;
+}
+.neon-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #fff;
+  border: 3px solid var(--range-color);
+  box-shadow: 0 0 10px var(--range-color);
+}
+.neon-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 3px solid var(--range-color);
+  box-shadow: 0 0 10px var(--range-color);
+}
+.neon-range:focus-visible {
+  box-shadow: 0 0 0 3px rgb(31 184 255 / 0.35);
+}
+
 ::selection {
-  background: hsl(150 58% 41% / 0.3);
+  background: rgb(255 45 135 / 0.35);
 }
 
-/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;
 }
-
 ::-webkit-scrollbar-track {
-  background: hsl(230 15% 7%);
+  background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: hsl(220 15% 18%);
+  background: rgb(130 150 255 / 0.2);
   border-radius: 3px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(150 58% 41% / 0.5);
+  background: rgb(31 184 255 / 0.5);
 }
 
 @layer base {
@@ -132,4 +193,9 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@keyframes eq {
+  0%, 100% { height: 35%; }
+  50% { height: 100%; }
 }

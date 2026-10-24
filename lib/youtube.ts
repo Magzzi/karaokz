@@ -1,5 +1,6 @@
 import { YouTubeVideo, YouTubeSearchResponse, YouTubeVideoDetailsResponse } from '@/types/youtube';
 import { addQuotaUsage, QUOTA_COST } from '@/lib/quota';
+import { ALLOWED_CHANNELS, ALLOWED_CHANNEL_NAMES, isAllowedChannel, isFullTrack, isoDurationSeconds, normalizeTitle } from '@/lib/sources';
 
 const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
@@ -34,17 +35,24 @@ function parseApiError(status: number, body: { error?: { errors?: { reason?: str
   return new Error('API_ERROR');
 }
 
+// Searches every allowed channel (one search.list call each) and merges the results
 export async function searchYouTubeVideos(query: string): Promise<YouTubeVideo[]> {
   if (!YOUTUBE_API_KEY) throw new Error('KEY_MISSING');
+  const perChannel = await Promise.all(ALLOWED_CHANNELS.map(c => searchChannel(query, c.id, YOUTUBE_API_KEY)));
+  return perChannel.flat();
+}
 
+async function searchChannel(query: string, channelId: string, key: string): Promise<YouTubeVideo[]> {
   const searchUrl = `${YOUTUBE_API_BASE}/search?` + new URLSearchParams({
     part: 'snippet',
-    q: `${query} karaoke`,
+    q: query,
+    channelId,
     type: 'video',
-    maxResults: '10',
+    // Many karaoke uploads block playback outside youtube.com; skip those
+    videoEmbeddable: 'true',
+    maxResults: '25',
     order: 'relevance',
-    videoCategoryId: '10',
-    key: YOUTUBE_API_KEY,
+    key,
   });
 
   const searchResponse = await fetch(searchUrl);
@@ -54,13 +62,14 @@ export async function searchYouTubeVideos(query: string): Promise<YouTubeVideo[]
   }
 
   const searchData: YouTubeSearchResponse = await searchResponse.json();
-  if (!searchData.items?.length) return [];
+  addQuotaUsage(QUOTA_COST.search);
+  const items = (searchData.items ?? []).filter(item => isAllowedChannel(item.snippet.channelId));
+  if (!items.length) return [];
 
-  const videoIds = searchData.items.map(item => item.id.videoId).join(',');
   const detailsUrl = `${YOUTUBE_API_BASE}/videos?` + new URLSearchParams({
     part: 'contentDetails',
-    id: videoIds,
-    key: YOUTUBE_API_KEY,
+    id: items.map(item => item.id.videoId).join(','),
+    key,
   });
 
   const detailsResponse = await fetch(detailsUrl);
@@ -70,16 +79,18 @@ export async function searchYouTubeVideos(query: string): Promise<YouTubeVideo[]
   }
 
   const detailsData: YouTubeVideoDetailsResponse = await detailsResponse.json();
+  const durations = new Map(detailsData.items.map(d => [d.id, d.contentDetails.duration]));
 
-  addQuotaUsage(QUOTA_COST.search);
-
-  return searchData.items.map((item, index) => ({
-    id: item.id.videoId,
-    title: item.snippet.title,
-    channelName: item.snippet.channelTitle,
-    thumbnail: item.snippet.thumbnails.medium.url,
-    duration: parseDuration(detailsData.items[index]?.contentDetails.duration || 'PT0S'),
-  }));
+  return items
+    .map(item => ({ item, iso: durations.get(item.id.videoId) || 'PT0S' }))
+    .filter(({ item, iso }) => isFullTrack(item.snippet.title, isoDurationSeconds(iso)))
+    .map(({ item, iso }) => ({
+      id: item.id.videoId,
+      title: normalizeTitle(item.snippet.title, item.snippet.channelId),
+      channelName: item.snippet.channelTitle,
+      thumbnail: item.snippet.thumbnails.medium.url,
+      duration: parseDuration(iso),
+    }));
 }
 
 // Fetch a single video's details by ID (used by the URL/ID manual input)
@@ -87,7 +98,7 @@ export async function fetchVideoById(videoId: string): Promise<YouTubeVideo | nu
   if (!YOUTUBE_API_KEY) throw new Error('KEY_MISSING');
 
   const url = `${YOUTUBE_API_BASE}/videos?` + new URLSearchParams({
-    part: 'snippet,contentDetails',
+    part: 'snippet,contentDetails,status',
     id: videoId,
     key: YOUTUBE_API_KEY,
   });
@@ -103,10 +114,12 @@ export async function fetchVideoById(videoId: string): Promise<YouTubeVideo | nu
 
   const item = data.items[0];
   addQuotaUsage(QUOTA_COST.videoFetch);
+  if (!isAllowedChannel(item.snippet.channelId)) throw new Error('CHANNEL_NOT_ALLOWED');
+  if (item.status?.embeddable === false) throw new Error('NOT_EMBEDDABLE');
 
   return {
     id: videoId,
-    title: item.snippet.title,
+    title: normalizeTitle(item.snippet.title, item.snippet.channelId),
     channelName: item.snippet.channelTitle,
     thumbnail:
       item.snippet.thumbnails.medium?.url ||
@@ -148,6 +161,10 @@ export function getApiErrorMessage(error: unknown): { message: string; isQuotaEr
         message: 'Daily quota reached (10,000 units). Use the URL tab to add songs directly.',
         isQuotaError: true,
       };
+    case 'CHANNEL_NOT_ALLOWED':
+      return { message: `Only songs from ${ALLOWED_CHANNEL_NAMES} can be added.`, isQuotaError: false };
+    case 'NOT_EMBEDDABLE':
+      return { message: "The owner blocks this video from playing outside YouTube, so it can't play here.", isQuotaError: false };
     case 'KEY_MISSING':
       return { message: 'YouTube API key is not configured.', isQuotaError: false };
     case 'KEY_INVALID':

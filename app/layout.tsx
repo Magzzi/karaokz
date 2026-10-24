@@ -1,20 +1,16 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Rubik } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-sans",
+const rubik = Rubik({
+  variable: "--font-rubik",
   subsets: ["latin"],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
-  title: "KaraOkz - Sing Your Heart Out",
-  description: "A modern karaoke web app for live sessions. Search YouTube, queue songs, and sing along!",
+  title: "KaraOKZ · Sing, Play, Good Vibes",
+  description: "Karaoke nights with friends: queue OPM and classic karaoke tracks from any phone and sing on the big screen.",
 };
 
 export default function RootLayout({
@@ -23,9 +19,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${rubik.variable} font-sans antialiased`}
       >
         {children}
       </body>

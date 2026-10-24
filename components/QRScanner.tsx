@@ -83,7 +83,7 @@ export default function QRScanner({ onResult, onClose }: QRScannerProps) {
       <div className="flex items-center justify-between px-4 py-3 bg-black/80 shrink-0">
         <div className="flex items-center gap-2">
           <Camera className="h-4 w-4 text-primary" />
-          <p className="text-white font-mono text-sm font-semibold">Scan Room QR Code</p>
+          <p className="text-white text-sm font-semibold">Scan Room QR Code</p>
         </div>
         <button onClick={onClose} className="text-white/60 hover:text-white transition-colors p-1">
           <X className="h-5 w-5" />
@@ -96,7 +96,7 @@ export default function QRScanner({ onResult, onClose }: QRScannerProps) {
           <div className="h-full flex items-center justify-center p-6">
             <div className="text-center space-y-3 max-w-xs">
               <Camera className="h-10 w-10 mx-auto text-white/20" />
-              <p className="text-sm font-mono text-white/60 leading-relaxed">{error}</p>
+              <p className="text-sm text-white/60 leading-relaxed">{error}</p>
             </div>
           </div>
         ) : (
@@ -129,7 +129,7 @@ export default function QRScanner({ onResult, onClose }: QRScannerProps) {
 
       {/* Bottom hint */}
       <div className="px-4 py-3 bg-black/80 shrink-0 text-center">
-        <p className="text-[11px] font-mono text-white/40">
+        <p className="text-[11px] text-white/40">
           Point camera at the QR code on the PC screen
         </p>
       </div>
