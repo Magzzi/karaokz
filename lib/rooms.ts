@@ -1,21 +1,35 @@
-import { supabase } from './supabase';
+import { ensureSession, supabase } from './supabase';
 import { Room, RoomQueueItem } from '@/types/room';
 import { YouTubeVideo } from '@/types/youtube';
 
-export async function createRoom(hostName: string): Promise<{ id: string; code: string }> {
-  const { data: code, error: codeError } = await supabase.rpc('generate_room_code');
-  if (codeError) throw codeError;
-
-  const { data, error } = await supabase
-    .from('rooms')
-    .insert({ code, host_name: hostName })
-    .select('id, code')
-    .single();
-
+// Creates the room, its join PIN and our host membership in one RPC
+export async function createRoom(hostName: string): Promise<{ id: string; code: string; joinPin: string }> {
+  await ensureSession();
+  const { data, error } = await supabase.rpc('create_room', { p_host_name: hostName }).single();
   if (error) throw error;
-  return data as { id: string; code: string };
+  const row = data as { id: string; code: string; join_pin: string };
+  return { id: row.id, code: row.code, joinPin: row.join_pin };
 }
 
+// Adds us as a guest; throws 'INVALID_INVITE' for a wrong code or PIN
+export async function joinRoom(code: string, pin: string): Promise<void> {
+  await ensureSession();
+  const { error } = await supabase.rpc('join_room', { p_code: code, p_pin: pin });
+  if (!error) return;
+  throw new Error(error.message.includes('INVALID_INVITE') ? 'INVALID_INVITE' : error.message);
+}
+
+// Host only (RLS on room_secrets): lets the host redisplay the invite QR
+export async function getJoinPin(roomId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from('room_secrets')
+    .select('join_pin')
+    .eq('room_id', roomId)
+    .maybeSingle();
+  return data?.join_pin ?? null;
+}
+
+// Null both when the room doesn't exist and when we aren't a member (RLS)
 export async function getRoomByCode(code: string): Promise<Room | null> {
   const { data, error } = await supabase
     .from('rooms')

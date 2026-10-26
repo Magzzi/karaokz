@@ -7,17 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Hash, QrCode, X } from 'lucide-react';
 import QRScanner from './QRScanner';
-
-// Extracts a room code from a scanned URL or bare code string
-function extractRoomCode(text: string): string | null {
-  const trimmed = text.trim();
-  // Full URL: https://karaokz.vercel.app/room/NOVA-07/add (or /room/NOVA-07)
-  const urlMatch = trimmed.match(/\/room\/([A-Za-z]+-\d{2})/i);
-  if (urlMatch) return urlMatch[1].toUpperCase();
-  // Bare code: NOVA-07
-  if (/^[A-Za-z]+-\d{2}$/i.test(trimmed)) return trimmed.toUpperCase();
-  return null;
-}
+import { normalizePin, parseInvite } from '@/lib/invite';
 
 interface JoinRoomDialogProps {
   onClose: () => void;
@@ -26,18 +16,27 @@ interface JoinRoomDialogProps {
 export default function JoinRoomDialog({ onClose }: JoinRoomDialogProps) {
   const router = useRouter();
   const [codeInput, setCodeInput] = useState('');
+  const [pinInput, setPinInput] = useState('');
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleJoin = (rawCode: string) => {
-    if (!rawCode.trim()) return;
-    router.push(`/room/${rawCode.trim().toUpperCase()}/add`);
+  // The guest page joins with the PIN from the fragment, or asks for it if missing
+  const handleJoin = (code: string, pin: string | null) => {
+    router.push(`/room/${code.toUpperCase()}/add${pin ? `#pin=${pin}` : ''}`);
+  };
+
+  const handleManualJoin = () => {
+    const invite = parseInvite(codeInput);
+    const pin = normalizePin(pinInput);
+    if (!invite) { setError('Room codes look like NOVA-07.'); return; }
+    if (!pin) { setError('Enter the 6-character PIN shown under the room code.'); return; }
+    handleJoin(invite.code, pin);
   };
 
   const handleScanResult = (text: string) => {
-    const code = extractRoomCode(text);
-    if (code) {
-      handleJoin(code);
+    const invite = parseInvite(text);
+    if (invite) {
+      handleJoin(invite.code, invite.pin);
     } else {
       setScanning(false);
       setError("Couldn't read a room code from the QR. Enter it manually below.");
@@ -77,14 +76,14 @@ export default function JoinRoomDialog({ onClose }: JoinRoomDialogProps) {
           </div>
           <div>
             <h2 className="font-bold text-foreground text-lg">Join a Room</h2>
-            <p className="text-sm text-muted-foreground">Enter the room code or scan the QR</p>
+            <p className="text-sm text-muted-foreground">Scan the QR, or enter the code and PIN</p>
           </div>
         </div>
 
         <div className="space-y-3">
           {/* Code input */}
           <form
-            onSubmit={(e) => { e.preventDefault(); handleJoin(codeInput); }}
+            onSubmit={(e) => { e.preventDefault(); handleManualJoin(); }}
             className="flex gap-2"
           >
             <Input
@@ -92,12 +91,20 @@ export default function JoinRoomDialog({ onClose }: JoinRoomDialogProps) {
               value={codeInput}
               onChange={(e) => { setCodeInput(e.target.value.toUpperCase()); setError(null); }}
               placeholder="e.g. NOVA-07"
-              className="flex-1 bg-black/25 border-white/10 text-base h-12 rounded-xl uppercase tracking-widest"
+              className="flex-1 min-w-0 bg-black/25 border-white/10 text-base h-12 rounded-xl uppercase tracking-widest"
               maxLength={10}
+            />
+            <Input
+              value={pinInput}
+              onChange={(e) => { setPinInput(e.target.value.toUpperCase()); setError(null); }}
+              placeholder="PIN"
+              autoComplete="off"
+              className="w-24 bg-black/25 border-white/10 text-base h-12 rounded-xl uppercase tracking-widest"
+              maxLength={7}
             />
             <Button
               type="submit"
-              disabled={!codeInput.trim()}
+              disabled={!codeInput.trim() || !pinInput.trim()}
               className="h-12 rounded-xl px-5 text-base font-semibold text-white bg-gradient-to-b from-[#2ab8ff] to-[#0b84e8]"
             >
               Join

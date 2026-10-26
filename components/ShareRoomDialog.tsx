@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import QRCode from 'react-qr-code';
 import { Check, Copy, X } from 'lucide-react';
+import { buildInviteUrl } from '@/lib/invite';
 
-export default function ShareRoomDialog({ code, onClose }: { code: string; onClose: () => void }) {
+export default function ShareRoomDialog({ code, pin, onClose }: { code: string; pin: string; onClose: () => void }) {
   const [copied, setCopied] = useState(false);
-  const joinUrl = `${window.location.origin}/room/${code.toUpperCase()}/add`;
+  // The link carries the PIN, so scanning joins in one step
+  const joinUrl = buildInviteUrl(window.location.origin, code, pin);
 
   const copy = () => {
     navigator.clipboard.writeText(joinUrl);
@@ -34,8 +36,11 @@ export default function ShareRoomDialog({ code, onClose }: { code: string; onClo
         </button>
 
         <p className="text-sm text-muted-foreground">Scan to add songs from your phone</p>
-        <p className="mt-1 mb-5 text-4xl font-black italic tracking-widest text-neon-pink neon-text-pink">
+        <p className="mt-1 text-4xl font-black italic tracking-widest text-neon-pink neon-text-pink">
           {code.toUpperCase()}
+        </p>
+        <p className="mt-1 mb-5 text-sm text-muted-foreground">
+          PIN <span className="font-mono text-lg font-bold tracking-[0.3em] text-neon-cyan">{pin}</span>
         </p>
 
         <div className="inline-block rounded-2xl bg-white p-4 shadow-[0_0_40px_rgb(31_184_255/0.35)]">

@@ -8,6 +8,7 @@ import SongLibrary from '@/components/SongLibrary';
 import QueueList from '@/components/QueueList';
 import { StageBackdrop } from '@/components/StageShell';
 import { useRoomQueue } from '@/lib/useRoomQueue';
+import { normalizePin } from '@/lib/invite';
 import { splitTitle } from '@/lib/sources';
 import { YouTubeVideo } from '@/types/youtube';
 
@@ -15,7 +16,8 @@ import { YouTubeVideo } from '@/types/youtube';
 // Layout stays in normal document flow (no inner scroll areas) for iOS Safari.
 export default function AddSongPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params);
-  const { status, items, currentItemId, current, add, remove, move } = useRoomQueue(code);
+  const { status, joinError, items, currentItemId, current, add, remove, move, join } = useRoomQueue(code);
+  const [pinInput, setPinInput] = useState('');
 
   const singerKey = `karaoke-singer-${code.toUpperCase()}`;
   const [singerName, setSingerName] = useState('');
@@ -57,9 +59,46 @@ export default function AddSongPage({ params }: { params: Promise<{ code: string
         {status === 'loading' ? (
           <Music2 className="h-9 w-9 text-neon-pink animate-pulse" />
         ) : (
-          <div className="text-center space-y-2">
+          <div className="text-center space-y-4 w-full max-w-xs">
             <p className="text-3xl font-black italic tracking-wider">{code.toUpperCase()}</p>
-            <p className="text-muted-foreground">Room not found or has ended.</p>
+            <p className="text-muted-foreground">
+              Scan the QR on the big screen, or enter the room PIN shown under the code.
+            </p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                (document.activeElement as HTMLElement | null)?.blur();
+                const pin = normalizePin(pinInput);
+                if (pin) join(pin);
+              }}
+              className="flex gap-2"
+            >
+              <input
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value.toUpperCase())}
+                placeholder="PIN"
+                autoCapitalize="characters"
+                autoComplete="off"
+                maxLength={7}
+                className="h-12 flex-1 min-w-0 rounded-xl border border-white/10 bg-black/25 px-4 text-base uppercase tracking-widest outline-none focus:border-neon-cyan/60"
+              />
+              <button
+                type="submit"
+                disabled={!normalizePin(pinInput)}
+                className="h-12 rounded-xl bg-gradient-to-b from-[#ff4f9d] to-[#e8146d] px-5 font-semibold text-white disabled:opacity-40"
+              >
+                Join
+              </button>
+            </form>
+            {joinError && (
+              <p className="text-sm text-destructive">
+                {joinError === 'INVALID_INVITE'
+                  ? "That PIN doesn't match an open room with this code."
+                  : joinError === 'SIGN_IN_FAILED'
+                    ? "Couldn't connect. Check your connection and reload."
+                    : 'Something went wrong. Try again.'}
+              </p>
+            )}
           </div>
         )}
       </div>

@@ -13,7 +13,7 @@ import UpNext from '@/components/UpNext';
 import ShareRoomDialog from '@/components/ShareRoomDialog';
 import QuotaDisplay from '@/components/QuotaDisplay';
 import { Button } from '@/components/ui/button';
-import { touchRoom, endRoom, markPlaying } from '@/lib/rooms';
+import { touchRoom, endRoom, markPlaying, getJoinPin } from '@/lib/rooms';
 import { useRoomQueue } from '@/lib/useRoomQueue';
 import { YouTubeVideo } from '@/types/youtube';
 
@@ -25,6 +25,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
 
   const { status, room, items, currentItemId, current, add, remove, move, play, ended } = useRoomQueue(code);
   const [showQR, setShowQR] = useState(false);
+  const [joinPin, setJoinPin] = useState<string | null>(null);
   const [volume, setVolume] = useState(80);
   const [rate, setRate] = useState(1);
   const [player, setPlayer] = useState<PlayerStatus>(IDLE);
@@ -37,6 +38,11 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
     touchRoom(room.id);
     const interval = setInterval(() => touchRoom(room.id), 5 * 60 * 1000);
     return () => clearInterval(interval);
+  }, [room]);
+
+  // Only the host can read the PIN (RLS), so other members get null
+  useEffect(() => {
+    if (room) getJoinPin(room.id).then(setJoinPin);
   }, [room]);
 
   // Publish what's playing so guests' phones show it and can skip it
@@ -67,7 +73,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
         ) : (
           <div className="text-center space-y-4">
             <p className="text-3xl font-black italic tracking-wider">{code.toUpperCase()}</p>
-            <p className="text-muted-foreground">Room not found or has ended.</p>
+            <p className="text-muted-foreground">Room not found, has ended, or was opened on another device.</p>
             <Button onClick={() => router.push('/')}>
               <ArrowLeft className="h-4 w-4" /> Go home
             </Button>
@@ -123,7 +129,9 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
             <UpNext
               title={next?.title ?? null}
               singerName={next?.singer_name}
-              hint={`Guests join at /room/${code.toUpperCase()}/add, or scan the Invite QR`}
+              hint={joinPin
+                ? `Scan the Invite QR, or join with code ${code.toUpperCase()} + PIN ${joinPin}`
+                : 'Scan the Invite QR on the host screen to join'}
             />
           </>
         }
@@ -167,7 +175,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
         }
       />
 
-      {showQR && <ShareRoomDialog code={code} onClose={() => setShowQR(false)} />}
+      {showQR && joinPin && <ShareRoomDialog code={code} pin={joinPin} onClose={() => setShowQR(false)} />}
     </>
   );
 }
